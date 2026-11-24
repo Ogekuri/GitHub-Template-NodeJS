@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.0.2](https://github.com/Ogekuri/GitHub-Template-NodeJS/releases/tag/v0.0.2) - 2026-11-24
+## [0.0.3](https://github.com/Ogekuri/GitHub-Template-NodeJS/releases/tag/v0.0.3) - 2026-11-24
 ### ⛰️  Features
 - Add .galias.conf file.
 
@@ -41,6 +41,6 @@
 
 # History
 
-- \[0.0.2\]: https://github.com/Ogekuri/GitHub-Template-NodeJS/releases/tag/v0.0.2
+- \[0.0.3\]: https://github.com/Ogekuri/GitHub-Template-NodeJS/releases/tag/v0.0.3
 
-[0.0.2]: https://github.com/Ogekuri/GitHub-Template-NodeJS/releases/tag/v0.0.2
+[0.0.3]: https://github.com/Ogekuri/GitHub-Template-NodeJS/releases/tag/v0.0.3
