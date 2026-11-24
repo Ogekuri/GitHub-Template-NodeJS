@@ -33,10 +33,11 @@ const VERSION = require(path.join(__dirname, "..", "..", "package.json")).versio
  *          `--ver` / `--version` -> aligned three-row version report
  *          fetching npm and GitHub with the gate bypassed (REQ-002,
  *          REQ-027..REQ-031); then `--upgrade`, optionally with the
- *          `--develop` source modifier selecting the GitHub development
- *          source (REQ-032..REQ-034) and the `--force` auxiliary
- *          modifier forcing the full re-download and reinstallation
- *          (REQ-035..REQ-038); then `--uninstall`; then the additive
+ *          `--develop` (or its `--dev` alias, REQ-048) source modifier
+ *          selecting the GitHub develop branch (REQ-032..REQ-034) and
+ *          the `--force` auxiliary modifier forcing the full
+ *          re-download and reinstallation (REQ-035..REQ-038); then
+ *          `--uninstall`; then the additive
  *          configuration CLI commands `--get`, `--set`, `--unset`,
  *          `--print-raw`, `--print`, `--info` (PRJ-006); unknown input
  *          falls back to the help screen. Non-forced invocations
@@ -47,9 +48,10 @@ const VERSION = require(path.join(__dirname, "..", "..", "package.json")).versio
  *          missing (REQ-044); `--ver` / `--version` bypass both the
  *          gate and the switch (REQ-045). Existing management dispatch
  *          and observable behavior are unchanged by the configuration
- *          branches (REQ-016..REQ-021). The `--develop` (REQ-034) and
- *          `--force` (REQ-038) modifiers dispatch no upgrade on their
- *          own and fall back to the help screen. Complexity:
+ *          branches (REQ-016..REQ-021). The `--develop` / `--dev`
+ *          (REQ-034, REQ-048) and `--force` (REQ-038) modifiers
+ *          dispatch no upgrade on their own and fall back to the help
+ *          screen. Complexity:
  *          O(args + network) network-bound.
  * @param {string[]} [argv] CLI arguments excluding the program name;
  *        undefined resolves to `process.argv.slice(2)`.
@@ -60,7 +62,7 @@ const VERSION = require(path.join(__dirname, "..", "..", "package.json")).versio
  * @satisfies REQ-001 REQ-002 REQ-007 REQ-016 REQ-017 REQ-018 REQ-019
  *            REQ-020 REQ-021 REQ-027 REQ-028 REQ-029 REQ-030 REQ-031
  *            REQ-032 REQ-033 REQ-034 REQ-035 REQ-036 REQ-037 REQ-038
- *            REQ-042 REQ-043 REQ-044 REQ-045 A-06 PRJ-006
+ *            REQ-042 REQ-043 REQ-044 REQ-045 REQ-048 A-06 PRJ-006
  */
 async function main(argv) {
     const args = argv === undefined ? [...process.argv.slice(2)] : [...argv];
@@ -77,7 +79,7 @@ async function main(argv) {
     }
     if (args.includes("--upgrade")) {
         return management.cmdUpgrade(
-            args.includes("--develop"),
+            args.includes("--develop") || args.includes("--dev"),
             args.includes("--force"),
         );
     }

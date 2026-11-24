@@ -19,7 +19,7 @@ A Node.js CLI application shipped as an npm-installable global tool with
 npm OIDC Trusted Publishing release automation. It provides management
 commands for upgrade, uninstall, and version reporting; an automatic
 new-version check throttled by an idle-time cache; self-upgrade from npm or
-from the latest GitHub tag via <code>--develop</code>; a dual-source version
+from the GitHub <code>develop</code> branch via <code>--develop</code> / <code>--dev</code>; a dual-source version
 report (installed / npm / GitHub); and a JSON configuration CLI
 (<code>version_check:disable-version-check</code>) with schema validation
 and atomic persistence.
@@ -43,7 +43,7 @@ and atomic persistence.
 - **Published on npm**: install with `npm install -g githubtemplatenodejs`, or run on-the-fly with `npx githubtemplatenodejs`.
 - **Dual-source version report** (`--ver` / `--version`): installed, latest npm, and latest GitHub versions in aligned columns.
 - **Automatic new-version check** before every run, throttled by an idle-time cache so no redundant network calls are made.
-- **Self-upgrade** from npm (`--upgrade`), forced full re-download (`--force`), or the latest GitHub tagged release (`--develop`).
+- **Self-upgrade** from npm (`--upgrade`), forced full re-download (`--force`), or the GitHub `develop` branch tip (`--develop` / `--dev`).
 - **One-command removal** (`--uninstall`) — on non-Linux systems the exact manual command is printed instead.
 - **Colored console notifications** (bright green for availability, bright red for errors), hardcoded in the embedded internal color JSON of `src/githubtemplatenodejs/colors.js`.
 - **Configuration CLI** (`--get`, `--set`, `--unset`, `--print`, `--info`, `--print-raw`) with schema validation and atomic persistence.
@@ -71,7 +71,7 @@ and atomic persistence.
 # Requirements
 
 - **Node.js >= 24**.
-- **`git`** — required only to install the development source with `--develop`.
+- **`git`** — required only to install the development source with `--develop` / `--dev`.
 - **Network access** — outbound HTTPS to `registry.npmjs.org` (version check, upgrades) and `api.github.com` (latest-release query for the `--ver` report and `--develop` channel).
 - **Linux** — required for the `--upgrade` and `--uninstall` side effects; on any other platform the tool prints a warning and the exact manual command.
 - **ANSI-capable terminal** — required for colored notifications.
@@ -109,17 +109,19 @@ releases on GitHub: `https://github.com/Ogekuri/GitHub-Template-NodeJS`.
 # Install from the GitHub repository
 npm install -g githubtemplatenodejs --force --from git+https://github.com/Ogekuri/GitHub-Template-NodeJS.git
 
-# Upgrade to the latest GitHub tagged release (tagged on any branch)
+# Upgrade to the latest build of the GitHub develop branch
 githubtemplatenodejs --upgrade --develop
+githubtemplatenodejs --upgrade --dev
 
 # Forced full re-download and reinstallation variants
 githubtemplatenodejs --upgrade --force
 githubtemplatenodejs --upgrade --develop --force
+githubtemplatenodejs --upgrade --dev --force
 ```
 
-`--upgrade --develop` always downloads the most recent tagged build from
-GitHub, regardless of the branch it was tagged on. The `--ver` report shows
-that channel in the `Latest @ GitHub` row.
+`--upgrade --develop` (alias `--dev`) always downloads the tip of the
+GitHub `develop` branch. The `--ver` report shows the release channel in
+the `Latest @ GitHub` row.
 
 ## Run locally from the repository
 
@@ -154,7 +156,8 @@ Configuration Commands:
   --print-raw - Print the exact bytes of the configuration JSON file.
 
 Options:
-  --develop   - With --upgrade: install from the GitHub development source.
+  --develop   - With --upgrade: install from the GitHub develop branch.
+  --dev       - Alias of --develop.
   --force     - With --upgrade: force full re-download and reinstallation.
 ```
 
@@ -179,13 +182,15 @@ the latest release tag.
 | --- | --- |
 | `--upgrade` | `npm install -g githubtemplatenodejs@latest` |
 | `--upgrade --force` | `npm install -g githubtemplatenodejs@latest --force` |
-| `--upgrade --develop` | `npm install -g git+https://github.com/Ogekuri/GitHub-Template-NodeJS.git` |
-| `--upgrade --develop --force` | `npm install -g git+https://github.com/Ogekuri/GitHub-Template-NodeJS.git --force` |
+| `--upgrade --develop` | `npm install -g git+https://github.com/Ogekuri/GitHub-Template-NodeJS.git#develop` |
+| `--upgrade --dev` | `npm install -g git+https://github.com/Ogekuri/GitHub-Template-NodeJS.git#develop` |
+| `--upgrade --develop --force` | `npm install -g git+https://github.com/Ogekuri/GitHub-Template-NodeJS.git#develop --force` |
+| `--upgrade --dev --force` | `npm install -g git+https://github.com/Ogekuri/GitHub-Template-NodeJS.git#develop --force` |
 
 On non-Linux operating systems nothing is executed: the tool prints a warning
-and the matching manual command from the table. `--develop` and `--force` are
-accepted exclusively as `--upgrade` modifiers; any other combination falls
-back to the normal dispatch behavior.
+and the matching manual command from the table. `--develop` (alias `--dev`)
+and `--force` are accepted exclusively as `--upgrade` modifiers; any other
+combination falls back to the normal dispatch behavior.
 
 ### `--uninstall` (Linux)
 

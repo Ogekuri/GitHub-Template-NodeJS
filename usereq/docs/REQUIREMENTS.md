@@ -16,9 +16,9 @@ This document MUST follow these authoring rules (LLM-first, normative SRS):
   - Do NOT add YAML front matter or in-document revision history; use git history / CHANGELOG.md for change tracking.
 
 ### 1.2 Project Scope
-Project `githubtemplatenodejs`: a Node.js CLI application published on npm (`https://www.npmjs.com/package/githubtemplatenodejs`) and distributed as a global npm tool via `npm install -g githubtemplatenodejs` or executed on-the-fly via `npx githubtemplatenodejs`; `git+https://github.com/Ogekuri/GitHub-Template-NodeJS.git` remains the optional development source of the `--upgrade --develop` variant; the repository doubles as the GitHub template `Ogekuri/GitHub-Template-NodeJS` ("GitHub template for NodeJS app", author Francesco Rolando); `scripts/rename-me.sh` instantiates a copied template into a renamed project across file contents, filenames, and paths.
+Project `githubtemplatenodejs`: a Node.js CLI application published on npm (`https://www.npmjs.com/package/githubtemplatenodejs`) and distributed as a global npm tool via `npm install -g githubtemplatenodejs` or executed on-the-fly via `npx githubtemplatenodejs`; `git+https://github.com/Ogekuri/GitHub-Template-NodeJS.git#develop` remains the optional development source (develop branch) of the `--upgrade --develop` / `--upgrade --dev` variants; the repository doubles as the GitHub template `Ogekuri/GitHub-Template-NodeJS` ("GitHub template for NodeJS app", author Francesco Rolando); `scripts/rename-me.sh` instantiates a copied template into a renamed project across file contents, filenames, and paths.
 
-Interface: text-only CLI in English; no GUI functionality is requested. Functional areas: management commands (`--help`, `--ver`, `--version`, `--upgrade`, `--uninstall`, with the `--develop` source modifier of `--upgrade`) independent from core logic; automatic online new-version check against the npm registry throttled by an idle-time JSON cache; `--ver` dual-source report covering npm and GitHub; colored console notifications. Configurability: version-check parameters (endpoint, timeout, and idle-delays) remain hardcoded constants and stay unexposed (CTN-008); the automatic online check itself is switchable through the schema parameter `version_check:disable-version-check` (REQ-042..REQ-045); the cache location derives from the `$HOME` environment variable; notification colors are hardcoded in the embedded internal color JSON of the dedicated module `colors.js` (REQ-040); a JSON configuration CLI (`--get`, `--set`, `--unset`, `--print`, `--info`, `--print-raw`) persists schema state at `$HOME/.config/githubtemplatenodejs/config.json`. No application project-local configuration layer exists. Performance constraints: HTTPS timeout of 2 seconds; cache gating avoids redundant network calls.
+Interface: text-only CLI in English; no GUI functionality is requested. Functional areas: management commands (`--help`, `--ver`, `--version`, `--upgrade`, `--uninstall`, with the `--develop` (alias `--dev`) source modifier of `--upgrade`) independent from core logic; automatic online new-version check against the npm registry throttled by an idle-time JSON cache; `--ver` dual-source report covering npm and GitHub; colored console notifications. Configurability: version-check parameters (endpoint, timeout, and idle-delays) remain hardcoded constants and stay unexposed (CTN-008); the automatic online check itself is switchable through the schema parameter `version_check:disable-version-check` (REQ-042..REQ-045); the cache location derives from the `$HOME` environment variable; notification colors are hardcoded in the embedded internal color JSON of the dedicated module `colors.js` (REQ-040); a JSON configuration CLI (`--get`, `--set`, `--unset`, `--print`, `--info`, `--print-raw`) persists schema state at `$HOME/.config/githubtemplatenodejs/config.json`. No application project-local configuration layer exists. Performance constraints: HTTPS timeout of 2 seconds; cache gating avoids redundant network calls.
 
 Component model: the CLI entry `src/githubtemplatenodejs/main.js` dispatches to management commands and core logic; a dedicated version-check component performs the HTTPS queries (npm registry JSON API for the gated check and the report, GitHub releases API for the report), cache persistence, and notification rendering before argument parsing; `scripts/templatenodejs.sh` wraps local execution. Repository tooling: `scripts/build.sh` packages the release into `dist/`, `scripts/clean.sh` removes every repository-internal execution-generated artifact so consecutive builds start from the identical state, and `scripts/pre-release-check.sh` verifies release readiness; `scripts/rename-me.sh` performs the one-shot template instantiation rename. The tracked `.galias.conf` file configures the external galias CLI for this repository; its `ver_rules` drive the version-consistency command `g ver` over the tracked version-bearing files.
 
@@ -226,12 +226,13 @@ Configuration Commands:
   --print-raw - Print the exact bytes of the configuration JSON file.
 
 Options:
-  --develop   - With --upgrade: install from the GitHub development source.
+  --develop   - With --upgrade: install from the GitHub develop branch.
+  --dev       - Alias of --develop.
   --force     - With --upgrade: force full re-download and reinstallation.
 ```
 
 - **REQ-002**: MUST print for `--ver` and `--version` the three-row version report with aligned version columns, bypassing the idle-time gate and cache file.
-- **REQ-003**: MUST execute `npm install -g githubtemplatenodejs@latest` when `--upgrade` runs on Linux without `--force`, upgrading the installed package from the npm registry.
+- **REQ-003**: MUST execute `npm install -g githubtemplatenodejs@latest` when `--upgrade` runs on Linux without a REQ-034 source modifier and without `--force`, upgrading the installed package from the npm registry.
 - **REQ-004**: MUST NOT execute any upgrade command on non-Linux operating systems; MUST print a warning and the manual command of REQ-003 or REQ-035 matching the requested variant instead.
 - **REQ-005**: MUST execute `npm uninstall -g githubtemplatenodejs` when `--uninstall` runs on Linux.
 - **REQ-006**: MUST NOT execute any uninstall command on non-Linux operating systems; MUST print a warning and the manual command of REQ-005 instead.
@@ -258,11 +259,11 @@ Options:
 - **REQ-029**: MUST fill the `Latest @ GitHub` report row with the latest release tag from `https://api.github.com/repos/Ogekuri/GitHub-Template-NodeJS/releases/latest`, stripped of its `v` prefix.
 - **REQ-030**: MUST print `unknown (<reason>)` in place of the version for a failed report source, `<reason>` naming the encountered error, plus a bright red note naming that source.
 - **REQ-031**: MUST update the version-check cache from the report npm outcome only: 3600-second idle-delay on success, 86400-second idle-delay on failure.
-- **REQ-032**: MUST execute `npm install -g git+https://github.com/Ogekuri/GitHub-Template-NodeJS.git` when `--upgrade --develop` runs on Linux without `--force`.
+- **REQ-032**: MUST execute `npm install -g git+https://github.com/Ogekuri/GitHub-Template-NodeJS.git#develop` when `--upgrade --develop` or `--upgrade --dev` runs on Linux without `--force`.
 - **REQ-033**: MUST NOT execute any develop-upgrade command on non-Linux operating systems; MUST print a warning and the manual command of REQ-032 or REQ-036 matching the requested variant instead.
-- **REQ-034**: MUST interpret `--develop` exclusively as a source modifier of `--upgrade`, leaving every other argument combination to the existing dispatch behavior.
+- **REQ-034**: MUST interpret `--develop` and its alias `--dev` exclusively as source modifiers of `--upgrade`, leaving every other argument combination to the existing dispatch behavior.
 - **REQ-035**: MUST execute `npm install -g githubtemplatenodejs@latest --force` when `--upgrade --force` runs on Linux, forcing full re-download and reinstallation from the npm registry.
-- **REQ-036**: MUST execute `npm install -g git+https://github.com/Ogekuri/GitHub-Template-NodeJS.git --force` when `--upgrade --develop --force` runs on Linux.
+- **REQ-036**: MUST execute `npm install -g git+https://github.com/Ogekuri/GitHub-Template-NodeJS.git#develop --force` when `--upgrade --develop --force` or `--upgrade --dev --force` runs on Linux.
 - **REQ-037**: MUST apply the forcing option `--force` only to the `--force` variants of `--upgrade`; non-forced variants MUST execute their upgrading argv without `--force`.
 - **REQ-038**: MUST interpret `--force` exclusively as an auxiliary modifier of `--upgrade`, leaving every other argument combination to the existing dispatch behavior.
 - **REQ-039**: MUST list every implemented command flag in the `--help` screen under Management Commands or Configuration Commands, each with a one-line English description.
@@ -274,11 +275,12 @@ Options:
 - **REQ-045**: MUST keep the `--ver` and `--version` report active with its REQ-002 fetches and REQ-031 cache update regardless of the `disable-version-check` value.
 - **REQ-046**: MUST treat version-check cache persistence as best effort: a failing cache write MUST NOT raise, print, or alter exit status and argument dispatch (refines REQ-010, A-06).
 - **REQ-047**: MUST compare versions by tolerant tuple parsing: every dot-separated component contributes its leading integer digits; missing or non-numeric prefixes evaluate as zero.
+- **REQ-048**: MUST treat `--dev` as an exact alias of `--develop`, selecting the identical REQ-032/REQ-036 develop variant in every `--upgrade` dispatch and manual fallback.
 
 ## 4. Test Requirements
-- **TST-001**: MUST verify REQ-001 and REQ-039 by running the CLI with no arguments and with `--help`; pass iff stdout equals the 3.2 template with `(x.y.z)` replaced by the current version.
+- **TST-001**: MUST verify REQ-001 and REQ-039 by running the CLI with no arguments and with `--help`; pass iff stdout equals the 3.2 template, including the `--develop` and `--dev` Options rows, with `(x.y.z)` replaced by the current version.
 - **TST-002**: MUST verify REQ-002 by invoking `--ver` and asserting the three-row aligned report prints and the fetches execute even with an unexpired cache file.
-- **TST-003**: MUST verify REQ-003, REQ-005, REQ-032, REQ-035, and REQ-036 on Linux (or a mocked platform) by asserting the exact npm registry, forced npm registry, develop, forced develop, and uninstall `npm` command strings execute.
+- **TST-003**: MUST verify REQ-003, REQ-005, REQ-032, REQ-035, REQ-036, and REQ-048 on Linux (or a mocked platform) by asserting the exact npm registry, forced npm registry, develop (`--develop` and `--dev` alias), forced develop, and uninstall `npm` command strings execute.
 - **TST-004**: MUST verify REQ-004, REQ-006, and REQ-033 by simulating a non-Linux platform and asserting no `npm` subprocess spawns while the warnings and manual commands print.
 - **TST-005**: MUST verify REQ-007, REQ-008, and REQ-009 with a mocked npm registry endpoint: absent cache triggers one request; unexpired cache triggers none; timeout equals 2 seconds.
 - **TST-006**: MUST verify REQ-010, REQ-011, REQ-012, and REQ-013 by mocking a newer-release response; pass iff bright green output prints and the cache holds four fields with idle-time equal to check time plus 3600.
@@ -289,7 +291,7 @@ Options:
 - **TST-011**: MUST verify REQ-026 and REQ-041 by asserting the version-check notifications render with the hardcoded bright green and bright red ANSI prefixes from the embedded color JSON.
 - **TST-012**: MUST verify DES-015 and CTN-010 by parsing `.github/workflows/release-npm.yml` and asserting every `uses:` pin meets the Node24-or-later runtime constraint with no fallback variable present.
 - **TST-013**: MUST verify REQ-027 through REQ-031 with mocked npm registry and GitHub payloads: exact aligned rows, `unknown (<reason>)` rows plus red notes on failures, and cache deltas driven only by the npm outcome.
-- **TST-014**: MUST verify REQ-032, REQ-033, REQ-034, REQ-036, and REQ-038 by asserting the exact develop argv variants on Linux, the warning and matching manual command on non-Linux, and no upgrade dispatch for `--develop` or `--force` alone.
+- **TST-014**: MUST verify REQ-032, REQ-033, REQ-034, REQ-036, REQ-038, and REQ-048 by asserting the exact develop argv variants for both `--develop` and `--dev` aliases on Linux, the warning and matching manual command on non-Linux, and no upgrade dispatch for `--develop`, `--dev`, or `--force` alone.
 - **TST-015**: MUST verify DES-016, DES-017, and DES-018 by parsing `.github/workflows/release-npm.yml` and asserting the OIDC publish job with `id-token: write` runs only for `master` tags while the release job runs for every tag.
 - **TST-016**: MUST verify DES-021, DES-022, DES-023, DES-024, DES-025, and DES-052 by executing `./scripts/build.sh` twice; pass iff both runs exit 0, both start from the identical cleaned startup state, `dist/` holds exactly one package tarball, and stale artifacts do not accumulate.
 - **TST-017**: MUST verify DES-026 through DES-038 by executing `./scripts/pre-release-check.sh`; pass iff exit code is 0 and `git status --porcelain --ignored` equals the pre-execution baseline.

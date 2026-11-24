@@ -106,8 +106,9 @@ const EXPECTED_HELP_TEXT = (
     + "  --print-raw - Print the exact bytes of the configuration JSON file.\n"
     + "\n"
     + "Options:\n"
-    + "  --develop   - With --upgrade: install from the GitHub development"
-    + " source.\n"
+    + "  --develop   - With --upgrade: install from the GitHub develop"
+    + " branch.\n"
+    + "  --dev       - Alias of --develop.\n"
     + "  --force     - With --upgrade: force full re-download and"
     + " reinstallation."
 );
@@ -390,11 +391,11 @@ test("help text matches the byte exact template", (t) => {
     ]);
     assert.deepStrictEqual(management.UPGRADE_DEVELOP_COMMAND, [
         "npm", "install", "-g",
-        "git+https://github.com/Ogekuri/GitHub-Template-NodeJS.git",
+        "git+https://github.com/Ogekuri/GitHub-Template-NodeJS.git#develop",
     ]);
     assert.deepStrictEqual(management.UPGRADE_DEVELOP_FORCE_COMMAND, [
         "npm", "install", "-g",
-        "git+https://github.com/Ogekuri/GitHub-Template-NodeJS.git",
+        "git+https://github.com/Ogekuri/GitHub-Template-NodeJS.git#develop",
         "--force",
     ]);
     assert.deepStrictEqual(management.UNINSTALL_COMMAND, [
@@ -434,6 +435,44 @@ test("upgrade develop on linux executes exact npm install", async (t) => {
     assert.deepStrictEqual(
         runMock.mock.calls[0].arguments[0],
         management.UPGRADE_DEVELOP_COMMAND,
+    );
+});
+
+test("upgrade dev alias on linux executes exact npm install", async (t) => {
+    /**
+     * @brief TST-003/TST-014 (REQ-032/REQ-048) L1: `--upgrade --dev`
+     *        alias spawns the exact develop argv.
+     * @details expected_output = exit code 0 and one runCommand call with
+     *          UPGRADE_DEVELOP_COMMAND; expected_exception = none.
+     */
+    t.mock.method(versionCheck, "runVersionCheck", async () => undefined);
+    t.mock.method(management, "isLinux", () => true);
+    const runMock = t.mock.method(management, "runCommand", () => 0);
+    const captured = await captureIO(() => core.main(["--upgrade", "--dev"]));
+    assert.strictEqual(captured.result, 0);
+    assert.deepStrictEqual(
+        runMock.mock.calls[0].arguments[0],
+        management.UPGRADE_DEVELOP_COMMAND,
+    );
+});
+
+test("upgrade dev force alias on linux executes exact npm install", async (t) => {
+    /**
+     * @brief TST-003/TST-014 (REQ-036/REQ-048) L1: `--upgrade --dev
+     *        --force` alias spawns the exact forced develop argv.
+     * @details expected_output = exit code 0 and one runCommand call with
+     *          UPGRADE_DEVELOP_FORCE_COMMAND; expected_exception = none.
+     */
+    t.mock.method(versionCheck, "runVersionCheck", async () => undefined);
+    t.mock.method(management, "isLinux", () => true);
+    const runMock = t.mock.method(management, "runCommand", () => 0);
+    const captured = await captureIO(
+        () => core.main(["--upgrade", "--dev", "--force"]),
+    );
+    assert.strictEqual(captured.result, 0);
+    assert.deepStrictEqual(
+        runMock.mock.calls[0].arguments[0],
+        management.UPGRADE_DEVELOP_FORCE_COMMAND,
     );
 });
 
@@ -528,6 +567,25 @@ test("upgrade develop on non linux prints manual without execution", async (t) =
     assert.strictEqual(runMock.mock.callCount(), 0);
 });
 
+test("upgrade dev alias on non linux prints manual without execution", async (t) => {
+    /**
+     * @brief TST-014 (REQ-033/REQ-048) L1: non-Linux `--upgrade --dev`
+     *        alias prints the develop manual command.
+     * @details expected_output = warning plus the REQ-032 manual command
+     *          on stdout and zero runCommand calls; expected_exception =
+     *          none.
+     */
+    t.mock.method(versionCheck, "runVersionCheck", async () => undefined);
+    t.mock.method(management, "isLinux", () => false);
+    const runMock = t.mock.method(management, "runCommand", () => 0);
+    const captured = await captureIO(() => core.main(["--upgrade", "--dev"]));
+    const out = captured.out();
+    assert.strictEqual(captured.result, 0);
+    assert.ok(out.includes("WARNING"), out);
+    assert.ok(out.includes(management.UPGRADE_DEVELOP_COMMAND.join(" ")), out);
+    assert.strictEqual(runMock.mock.callCount(), 0);
+});
+
 test("upgrade force on non linux prints manual without execution", async (t) => {
     /**
      * @brief TST-004 (REQ-035) L1: non-Linux forced upgrade manual.
@@ -599,6 +657,22 @@ test("develop alone falls back to help without upgrade", async (t) => {
     t.mock.method(management, "isLinux", () => true);
     const runMock = t.mock.method(management, "runCommand", () => 0);
     const captured = await captureIO(() => core.main(["--develop"]));
+    assert.strictEqual(captured.result, 0);
+    assert.strictEqual(captured.out(), EXPECTED_HELP_TEXT + "\n");
+    assert.strictEqual(runMock.mock.callCount(), 0);
+});
+
+test("dev alone falls back to help without upgrade", async (t) => {
+    /**
+     * @brief TST-014 (REQ-034/REQ-048) L2: `--dev` alone dispatches no
+     *        upgrade.
+     * @details expected_output = exact help screen and zero runCommand
+     *          calls; expected_exception = none.
+     */
+    t.mock.method(versionCheck, "runVersionCheck", async () => undefined);
+    t.mock.method(management, "isLinux", () => true);
+    const runMock = t.mock.method(management, "runCommand", () => 0);
+    const captured = await captureIO(() => core.main(["--dev"]));
     assert.strictEqual(captured.result, 0);
     assert.strictEqual(captured.out(), EXPECTED_HELP_TEXT + "\n");
     assert.strictEqual(runMock.mock.callCount(), 0);
@@ -1665,7 +1739,8 @@ test("readme command and configuration documentation contract", () => {
     /**
      * @brief TST-032 (DES-059/DES-060): README stays behavior-consistent.
      * @details expected_output = README carries the exact REQ-003 upgrade
-     *          argv and the REQ-032 develop argv, documents the
+     *          argv and the REQ-032 develop argv (including the REQ-048
+     *          `--dev` alias rows), documents the
      *          `version_check:disable-version-check` parameter, and keeps
      *          no stale schema-empty or configurable-color claims;
      *          expected_exception = none.
@@ -1674,10 +1749,11 @@ test("readme command and configuration documentation contract", () => {
     assert.ok(text.includes("`npm install -g githubtemplatenodejs@latest`"), text);
     assert.ok(
         text.includes(
-            "`npm install -g git+https://github.com/Ogekuri/GitHub-Template-NodeJS.git`",
+            "`npm install -g git+https://github.com/Ogekuri/GitHub-Template-NodeJS.git#develop`",
         ),
         text,
     );
+    assert.ok(text.includes("`--upgrade --dev`"), text);
     assert.ok(text.includes("version_check:disable-version-check"), text);
     assert.ok(!text.includes("currently defines no sections"), text);
     assert.ok(!text.includes("notification-color subsystem"), text);

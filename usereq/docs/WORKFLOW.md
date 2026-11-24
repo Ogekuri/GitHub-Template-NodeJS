@@ -58,8 +58,8 @@ no explicit threads detected.
   enabled (REQ-043; the dual-source version report variant for `--ver` /
   `--version` always executes, independent of the switch and the gate);
   then dispatches help, the aligned three-row version report, the
-  install/uninstall management commands with the `--develop` and `--force`
-  upgrade modifiers, and the configuration CLI commands (`--get`, `--set`,
+  install/uninstall management commands with the `--develop` / `--dev` and
+  `--force` upgrade modifiers, and the configuration CLI commands (`--get`, `--set`,
   `--unset`, `--print-raw`, `--print`, `--info`); unknown input falls back
   to the help screen; terminates through `process.exit` with the
   dispatcher promise resolution (0/child status/1).
@@ -133,7 +133,7 @@ no explicit threads detected.
   - `management.cmdUpgrade(...)`: install lifecycle
     [`src/githubtemplatenodejs/management.js`]
     - `management.upgradeCommand(...)`: variant selection by
-      `--develop` / `--force`
+      `--develop` / `--dev` / `--force`
       [`src/githubtemplatenodejs/management.js`]
     - `management.runCommand(...)`: synchronous child spawn with
       inherited streams and exit-code propagation (Linux only)

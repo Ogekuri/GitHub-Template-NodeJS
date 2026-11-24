@@ -805,7 +805,7 @@ exit 1 (REQ-023). Complexity: O(file size + schema).
 
 ---
 
-# core.js | JavaScript | 108L | 7 symbols | 0 imports | 3 comments
+# core.js | JavaScript | 110L | 7 symbols | 0 imports | 3 comments
 > Path: `src/githubtemplatenodejs/core.js`
 - @brief Core command dispatch and githubtemplatenodejs CLI runtime
 orchestration.
@@ -816,18 +816,18 @@ the process boundary.
 
 ## Definitions
 
-### mod `const path = require("path")` (L11-54)
+### mod `const path = require("path")` (L11-56)
 
-### mod `const config = require("./config")` (L12-54)
+### mod `const config = require("./config")` (L12-56)
 
-### mod `const configRender = require("./config_render")` (L13-54)
+### mod `const configRender = require("./config_render")` (L13-56)
 
-### mod `const management = require("./management")` (L14-54)
+### mod `const management = require("./management")` (L14-56)
 - @brief Installed package version (single version source).
 - @details Read once from the packaging metadata `package.json` at the repository/package root (two directory levels above this module); the same constant feeds the CLI usage line (A-01), the version report (REQ-002), and the availability comparison (REQ-012). Resolution works identically inside the repository and inside an installed `node_modules` package because npm always ships `package.json` at the package root.
 - @satisfies A-01 DES-001
 
-### mod `const versionCheck = require("./version_check")` (L15-54)
+### mod `const versionCheck = require("./version_check")` (L15-56)
 - @brief Installed package version (single version source).
 - @details Read once from the packaging metadata `package.json` at the repository/package root (two directory levels above this module); the same constant feeds the CLI usage line (A-01), the version report (REQ-002), and the availability comparison (REQ-012). Resolution works identically inside the repository and inside an installed `node_modules` package because npm always ships `package.json` at the package root.
 - @satisfies A-01 DES-001
@@ -842,16 +842,17 @@ and inside an installed `node_modules` package because npm
 always ships `package.json` at the package root.
   - @satisfies A-01 DES-001
 
-### fn `async function main(argv)` (L65-106)
+### fn `async function main(argv)` (L67-108)
 - @brief Execute the gated version check, then dispatch commands.
 - @details Dispatch order: `--help` or no arguments -> help screen;
 `--ver` / `--version` -> aligned three-row version report
 fetching npm and GitHub with the gate bypassed (REQ-002,
 REQ-027..REQ-031); then `--upgrade`, optionally with the
-`--develop` source modifier selecting the GitHub development
-source (REQ-032..REQ-034) and the `--force` auxiliary
-modifier forcing the full re-download and reinstallation
-(REQ-035..REQ-038); then `--uninstall`; then the additive
+`--develop` (or its `--dev` alias, REQ-048) source modifier
+selecting the GitHub develop branch (REQ-032..REQ-034) and
+the `--force` auxiliary modifier forcing the full
+re-download and reinstallation (REQ-035..REQ-038); then
+`--uninstall`; then the additive
 configuration CLI commands `--get`, `--set`, `--unset`,
 `--print-raw`, `--print`, `--info` (PRJ-006); unknown input
 falls back to the help screen. Non-forced invocations
@@ -862,9 +863,10 @@ and always restored when the configuration is unreadable or
 missing (REQ-044); `--ver` / `--version` bypass both the
 gate and the switch (REQ-045). Existing management dispatch
 and observable behavior are unchanged by the configuration
-branches (REQ-016..REQ-021). The `--develop` (REQ-034) and
-`--force` (REQ-038) modifiers dispatch no upgrade on their
-own and fall back to the help screen. Complexity:
+branches (REQ-016..REQ-021). The `--develop` / `--dev`
+(REQ-034, REQ-048) and `--force` (REQ-038) modifiers
+dispatch no upgrade on their own and fall back to the help
+screen. Complexity:
 O(args + network) network-bound.
 - @param {string[]} [argv] CLI arguments excluding the program name;
 undefined resolves to `process.argv.slice(2)`.
@@ -875,18 +877,18 @@ failures (REQ-023).
 - @satisfies REQ-001 REQ-002 REQ-007 REQ-016 REQ-017 REQ-018 REQ-019
 REQ-020 REQ-021 REQ-027 REQ-028 REQ-029 REQ-030 REQ-031
 REQ-032 REQ-033 REQ-034 REQ-035 REQ-036 REQ-037 REQ-038
-REQ-042 REQ-043 REQ-044 REQ-045 A-06 PRJ-006
+REQ-042 REQ-043 REQ-044 REQ-045 REQ-048 A-06 PRJ-006
 
 ## Symbol Index
 |Symbol|Kind|Vis|Lines|Sig|
 |---|---|---|---|---|
-|`path`|mod||11-54||
-|`config`|mod||12-54||
-|`configRender`|mod||13-54||
-|`management`|mod||14-54||
-|`versionCheck`|mod||15-54||
+|`path`|mod||11-56||
+|`config`|mod||12-56||
+|`configRender`|mod||13-56||
+|`management`|mod||14-56||
+|`versionCheck`|mod||15-56||
 |`versionCheck.VERSION`|const||28||
-|`main`|fn||65-106|async function main(argv)|
+|`main`|fn||67-108|async function main(argv)|
 
 
 ---
@@ -926,7 +928,7 @@ stderr.
 
 ---
 
-# management.js | JavaScript | 353L | 15 symbols | 0 imports | 16 comments
+# management.js | JavaScript | 362L | 15 symbols | 0 imports | 16 comments
 > Path: `src/githubtemplatenodejs/management.js`
 - @brief Management commands of githubtemplatenodejs, isolated from core
 dispatch logic (DES-005).
@@ -962,45 +964,48 @@ command on non-Linux platforms (REQ-004). The `--force`
 option forces the full re-download and complete
 reinstallation of the package from the npm registry (REQ-037).
 - @satisfies REQ-035 REQ-037
-- const `const UPGRADE_DEVELOP_COMMAND = [` (L68)
+- const `const UPGRADE_DEVELOP_COMMAND = [` (L69)
 - @brief Exact develop-source `npm install -g` argv executed on Linux by
-`--upgrade --develop` without `--force` (REQ-032).
+`--upgrade --develop` / `--upgrade --dev` without `--force`
+(REQ-032, REQ-048).
 - @details `UPGRADE_DEVELOP_COMMAND.join(" ")` equals the literal string
 mandated by REQ-032 and is printed verbatim as the manual
-command on non-Linux platforms (REQ-033). Source resolves from
-the GitHub repository (latest tagged release, any branch); no
-`--force` applies to the non-forced variant (REQ-037).
-- @satisfies REQ-032 REQ-033 REQ-037
-- const `const UPGRADE_DEVELOP_FORCE_COMMAND = [` (L85)
+command on non-Linux platforms (REQ-033). The `#develop`
+fragment pins the source to the tip of the `develop` branch;
+no `--force` applies to the non-forced variant (REQ-037).
+- @satisfies REQ-032 REQ-033 REQ-037 REQ-048
+- const `const UPGRADE_DEVELOP_FORCE_COMMAND = [` (L88)
 - @brief Exact forced develop-source `npm install -g` argv executed on
-Linux by `--upgrade --develop --force` (REQ-036).
+Linux by `--upgrade --develop --force` / `--upgrade --dev
+--force` (REQ-036, REQ-048).
 - @details `UPGRADE_DEVELOP_FORCE_COMMAND.join(" ")` equals the literal
 string mandated by REQ-036 and is printed verbatim as the
 manual command on non-Linux platforms (REQ-033). The
-`--force` option forces the full re-download and complete
-reinstallation from the GitHub repository source (REQ-037).
-- @satisfies REQ-036 REQ-037
-- const `const UNINSTALL_COMMAND = [` (L101)
+`#develop` fragment pins the source to the tip of the
+`develop` branch; `--force` forces the full re-download and
+complete reinstallation (REQ-037).
+- @satisfies REQ-036 REQ-037 REQ-048
+- const `const UNINSTALL_COMMAND = [` (L104)
 - @brief Exact `npm uninstall -g` argv executed on Linux by `--uninstall`
 (REQ-005).
 - @details `UNINSTALL_COMMAND.join(" ")` equals the literal string
 mandated by REQ-005 and is printed verbatim as the manual
 command on non-Linux platforms (REQ-006).
 - @satisfies REQ-005 REQ-006
-- const `const FLAG_COLUMN_WIDTH = "--uninstall".length;` (L115)
+- const `const FLAG_COLUMN_WIDTH = "--uninstall".length;` (L118)
 - @brief Flag column width keeping management help lines aligned.
 - @details Equals the length of the longest documented flag
 `--uninstall` (11 characters); every entry line pads its flag
 to this width before the ` - ` separator (REQ-001 alignment).
 - @satisfies REQ-001
-### fn `function isLinux()` (L124-126)
+### fn `function isLinux()` (L127-129)
 - @brief Report whether the current operating system is Linux.
 - @details `process.platform` identity check; all other platforms take
 the manual-command branch (A-09). Complexity: O(1).
 - @return {boolean} True on Linux, false otherwise.
 - @satisfies A-09 CTN-009
 
-### fn `function managementEntry(flag, description)` (L138-141)
+### fn `function managementEntry(flag, description)` (L141-144)
 - @brief Render one aligned help-screen entry line.
 - @details Flag is padded with trailing spaces to `FLAG_COLUMN_WIDTH`,
 then ` - ` and the description follow (REQ-001 template).
@@ -1010,7 +1015,7 @@ Complexity: O(width + description length).
 - @return {string} Line matching the REQ-001 template alignment.
 - @satisfies REQ-001 REQ-039
 
-### fn `function upgradeCommand(develop, force)` (L157-162)
+### fn `function upgradeCommand(develop, force)` (L161-166)
 - @brief Select the exact upgrade argv for the requested variant.
 - @details Mapping mandated by the SRS: `(false, false)` ->
 UPGRADE_COMMAND (REQ-003), `(false, true)` ->
@@ -1019,26 +1024,28 @@ UPGRADE_DEVELOP_COMMAND (REQ-032), `(true, true)` ->
 UPGRADE_DEVELOP_FORCE_COMMAND (REQ-036). Forcing options are
 applied only when `force` is true; non-forced variants
 upgrade without `--force` (REQ-037). Complexity: O(1).
-- @param {boolean} develop True selects the GitHub development source.
+- @param {boolean} develop True selects the GitHub develop-branch source
+(`--develop` / `--dev` alias, REQ-048).
 - @param {boolean} force True selects the forced reinstallation variant.
 - @return {string[]} Exact argv of the requested upgrade variant.
-- @satisfies REQ-003 REQ-032 REQ-035 REQ-036 REQ-037
+- @satisfies REQ-003 REQ-032 REQ-035 REQ-036 REQ-037 REQ-048
 
-### fn `function buildHelpText(version)` (L178-247)
+### fn `function buildHelpText(version)` (L183-256)
 - @brief Render the full help screen text (REQ-001 template).
 - @details The literal `(x.y.z)` slot of the template receives the
 installed version (A-01); the `Management Commands:` section
 lists every management command, the
 `Configuration Commands:` section lists every configuration
 command (REQ-039, A-02), and the `Options:` section documents
-the `--develop` and `--force` modifiers of `--upgrade`.
+the `--develop` / `--dev` (REQ-048) and `--force` modifiers
+of `--upgrade`.
 Complexity: O(lines) over the fixed template.
 - @param {string} version Installed version in `x.y.z` format.
 - @return {string} Help text without trailing newline; the caller prints
 it.
 - @satisfies REQ-001 REQ-039 A-01 A-02
 
-### fn `function printHelp(version)` (L258-261)
+### fn `function printHelp(version)` (L267-270)
 - @brief Print the full help screen to stdout.
 - @details Emits exactly one trailing newline after the help text;
 stdout carries no other content. Side effect: one stdout
@@ -1047,7 +1054,7 @@ write. Complexity: O(help text length).
 - @return {number} Always 0.
 - @satisfies REQ-001 PRJ-005
 
-### fn `function runCommand(argv)` (L275-282)
+### fn `function runCommand(argv)` (L284-291)
 - @brief Execute one external command argv synchronously, inheriting the
 standard streams.
 - @details Delegates to `child_process.spawnSync` with `stdio:
@@ -1059,7 +1066,7 @@ argv without spawning a process.
 - @return {number} Child exit status; 1 when the child could not spawn.
 - @satisfies REQ-003 REQ-005 REQ-032 REQ-035 REQ-036 CTN-009
 
-### fn `function cmdUpgrade(develop, force)` (L308-318)
+### fn `function cmdUpgrade(develop, force)` (L317-327)
 - @brief Upgrade the tool via the installed `npm` CLI on Linux.
 - @details On Linux the exact argv selected by `develop` and `force`
 executes synchronously with inherited streams and its exit
@@ -1072,18 +1079,18 @@ reinstallation (REQ-036); forcing options apply only when
 `force` is true (REQ-037). On any other OS no process spawns;
 a warning plus the matching manual command print instead
 (REQ-004, REQ-033). Complexity: O(1) on the fallback path.
-- @param {boolean} develop True selects the GitHub development source
-(`--upgrade --develop`); false selects the npm registry source
-(default).
+- @param {boolean} develop True selects the GitHub develop-branch source
+(`--upgrade --develop` / `--upgrade --dev`, REQ-048); false
+selects the npm registry source (default).
 - @param {boolean} force True selects the forced full re-download and
 reinstallation variant (`--upgrade --force`, REQ-037); false
 executes the standard process without any forcing option.
 - @return {number} 0 on manual fallback or successful subprocess;
 otherwise the `npm` process exit code.
 - @satisfies REQ-003 REQ-004 REQ-032 REQ-033 REQ-035 REQ-036 REQ-037
-CTN-009
+REQ-048 CTN-009
 
-### fn `function cmdUninstall()` (L331-338)
+### fn `function cmdUninstall()` (L340-347)
 - @brief Uninstall the tool via `npm uninstall -g` on Linux.
 - @details On Linux the exact UNINSTALL_COMMAND argv executes
 synchronously with inherited streams and its exit code
@@ -1100,18 +1107,18 @@ otherwise the `npm` process exit code.
 |`PROGRAM_NAME`|const||21||
 |`UPGRADE_COMMAND`|const||33||
 |`UPGRADE_FORCE_COMMAND`|const||50||
-|`UPGRADE_DEVELOP_COMMAND`|const||68||
-|`UPGRADE_DEVELOP_FORCE_COMMAND`|const||85||
-|`UNINSTALL_COMMAND`|const||101||
-|`FLAG_COLUMN_WIDTH`|const||115||
-|`isLinux`|fn||124-126|function isLinux()|
-|`managementEntry`|fn||138-141|function managementEntry(flag, description)|
-|`upgradeCommand`|fn||157-162|function upgradeCommand(develop, force)|
-|`buildHelpText`|fn||178-247|function buildHelpText(version)|
-|`printHelp`|fn||258-261|function printHelp(version)|
-|`runCommand`|fn||275-282|function runCommand(argv)|
-|`cmdUpgrade`|fn||308-318|function cmdUpgrade(develop, force)|
-|`cmdUninstall`|fn||331-338|function cmdUninstall()|
+|`UPGRADE_DEVELOP_COMMAND`|const||69||
+|`UPGRADE_DEVELOP_FORCE_COMMAND`|const||88||
+|`UNINSTALL_COMMAND`|const||104||
+|`FLAG_COLUMN_WIDTH`|const||118||
+|`isLinux`|fn||127-129|function isLinux()|
+|`managementEntry`|fn||141-144|function managementEntry(flag, description)|
+|`upgradeCommand`|fn||161-166|function upgradeCommand(develop, force)|
+|`buildHelpText`|fn||183-256|function buildHelpText(version)|
+|`printHelp`|fn||267-270|function printHelp(version)|
+|`runCommand`|fn||284-291|function runCommand(argv)|
+|`cmdUpgrade`|fn||317-327|function cmdUpgrade(develop, force)|
+|`cmdUninstall`|fn||340-347|function cmdUninstall()|
 
 
 ---

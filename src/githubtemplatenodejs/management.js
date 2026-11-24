@@ -57,36 +57,39 @@ const UPGRADE_FORCE_COMMAND = [
 
 /**
  * @brief Exact develop-source `npm install -g` argv executed on Linux by
- *        `--upgrade --develop` without `--force` (REQ-032).
+ *        `--upgrade --develop` / `--upgrade --dev` without `--force`
+ *        (REQ-032, REQ-048).
  * @details `UPGRADE_DEVELOP_COMMAND.join(" ")` equals the literal string
  *          mandated by REQ-032 and is printed verbatim as the manual
- *          command on non-Linux platforms (REQ-033). Source resolves from
- *          the GitHub repository (latest tagged release, any branch); no
- *          `--force` applies to the non-forced variant (REQ-037).
- * @satisfies REQ-032 REQ-033 REQ-037
+ *          command on non-Linux platforms (REQ-033). The `#develop`
+ *          fragment pins the source to the tip of the `develop` branch;
+ *          no `--force` applies to the non-forced variant (REQ-037).
+ * @satisfies REQ-032 REQ-033 REQ-037 REQ-048
  */
 const UPGRADE_DEVELOP_COMMAND = [
     "npm",
     "install",
     "-g",
-    "git+https://github.com/Ogekuri/GitHub-Template-NodeJS.git",
+    "git+https://github.com/Ogekuri/GitHub-Template-NodeJS.git#develop",
 ];
 
 /**
  * @brief Exact forced develop-source `npm install -g` argv executed on
- *        Linux by `--upgrade --develop --force` (REQ-036).
+ *        Linux by `--upgrade --develop --force` / `--upgrade --dev
+ *        --force` (REQ-036, REQ-048).
  * @details `UPGRADE_DEVELOP_FORCE_COMMAND.join(" ")` equals the literal
  *          string mandated by REQ-036 and is printed verbatim as the
  *          manual command on non-Linux platforms (REQ-033). The
- *          `--force` option forces the full re-download and complete
- *          reinstallation from the GitHub repository source (REQ-037).
- * @satisfies REQ-036 REQ-037
+ *          `#develop` fragment pins the source to the tip of the
+ *          `develop` branch; `--force` forces the full re-download and
+ *          complete reinstallation (REQ-037).
+ * @satisfies REQ-036 REQ-037 REQ-048
  */
 const UPGRADE_DEVELOP_FORCE_COMMAND = [
     "npm",
     "install",
     "-g",
-    "git+https://github.com/Ogekuri/GitHub-Template-NodeJS.git",
+    "git+https://github.com/Ogekuri/GitHub-Template-NodeJS.git#develop",
     "--force",
 ];
 
@@ -149,10 +152,11 @@ function managementEntry(flag, description) {
  *          UPGRADE_DEVELOP_FORCE_COMMAND (REQ-036). Forcing options are
  *          applied only when `force` is true; non-forced variants
  *          upgrade without `--force` (REQ-037). Complexity: O(1).
- * @param {boolean} develop True selects the GitHub development source.
+ * @param {boolean} develop True selects the GitHub develop-branch source
+ *        (`--develop` / `--dev` alias, REQ-048).
  * @param {boolean} force True selects the forced reinstallation variant.
  * @return {string[]} Exact argv of the requested upgrade variant.
- * @satisfies REQ-003 REQ-032 REQ-035 REQ-036 REQ-037
+ * @satisfies REQ-003 REQ-032 REQ-035 REQ-036 REQ-037 REQ-048
  */
 function upgradeCommand(develop, force) {
     if (develop) {
@@ -168,7 +172,8 @@ function upgradeCommand(develop, force) {
  *          lists every management command, the
  *          `Configuration Commands:` section lists every configuration
  *          command (REQ-039, A-02), and the `Options:` section documents
- *          the `--develop` and `--force` modifiers of `--upgrade`.
+ *          the `--develop` / `--dev` (REQ-048) and `--force` modifiers
+ *          of `--upgrade`.
  *          Complexity: O(lines) over the fixed template.
  * @param {string} version Installed version in `x.y.z` format.
  * @return {string} Help text without trailing newline; the caller prints
@@ -225,7 +230,11 @@ function buildHelpText(version) {
     const optionEntries = [
         managementEntry(
             "--develop",
-            "With --upgrade: install from the GitHub development source.",
+            "With --upgrade: install from the GitHub develop branch.",
+        ),
+        managementEntry(
+            "--dev",
+            "Alias of --develop.",
         ),
         managementEntry(
             "--force",
@@ -294,16 +303,16 @@ function runCommand(argv) {
  *          `force` is true (REQ-037). On any other OS no process spawns;
  *          a warning plus the matching manual command print instead
  *          (REQ-004, REQ-033). Complexity: O(1) on the fallback path.
- * @param {boolean} develop True selects the GitHub development source
- *        (`--upgrade --develop`); false selects the npm registry source
- *        (default).
+ * @param {boolean} develop True selects the GitHub develop-branch source
+ *        (`--upgrade --develop` / `--upgrade --dev`, REQ-048); false
+ *        selects the npm registry source (default).
  * @param {boolean} force True selects the forced full re-download and
  *        reinstallation variant (`--upgrade --force`, REQ-037); false
  *        executes the standard process without any forcing option.
  * @return {number} 0 on manual fallback or successful subprocess;
  *         otherwise the `npm` process exit code.
  * @satisfies REQ-003 REQ-004 REQ-032 REQ-033 REQ-035 REQ-036 REQ-037
- *            CTN-009
+ *            REQ-048 CTN-009
  */
 function cmdUpgrade(develop, force) {
     const withDevelop = develop === true;
