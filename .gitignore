@@ -1,0 +1,67 @@
+##########################################
+# Exlude all files by default            #
+# (unignore rules will override this)    #
+##########################################
+/*
+*.*
+*/**
+
+##########################################
+# Include specific files and directories #
+##########################################
+!/.github/
+!/.github/workflows/
+!/.github/workflows/**/*.yml
+!/.github/workflows/**/*.yaml
+!/.gitignore
+!README.md
+!CHANGELOG.md
+!WORKFLOW.md
+!TODO.md
+!LICENSE
+!LICENSE.txt
+!setup.py
+!pyproject.toml
+!uv.lock
+!package-lock.json
+!package.json
+!src/
+!src/**/*
+!docs/
+!docs/**/*
+!guidelines/
+!guidelines/**/*
+!tests/
+!tests/**/*
+!usereq/
+!usereq/**/*
+!other-stuff/
+!other-stuff/**/*
+!scripts/
+!scripts/**/*.sh
+!images/
+!images/**/*
+!dist/
+!dist/**/*
+
+##########################################
+# Exlucde specific files and directories #
+##########################################
+
+# Exlude github agents and prompts
+.github/agents/
+.github/prompts/
+
+# Node.js execution-generated artifacts
+node_modules/
+.npm/
+.eslintcache
+.nyc_output/
+coverage/
+build/
+*.log
+logs/
+
+# Distribution packaging scratch state
+*.orig
+*.rej

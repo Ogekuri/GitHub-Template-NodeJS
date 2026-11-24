@@ -1,0 +1,39 @@
+{
+  "name": "githubtemplatenodejs",
+  "version": "0.0.1",
+  "description": "GitHub template for NodeJS app.",
+  "keywords": [
+    "shell",
+    "scripts",
+    "npm",
+    "nodejs",
+    "npx",
+    "cli"
+  ],
+  "homepage": "https://github.com/Ogekuri/GitHub-Template-NodeJS#readme",
+  "bugs": {
+    "url": "https://github.com/Ogekuri/GitHub-Template-NodeJS/issues"
+  },
+  "license": "GPL-3.0-only",
+  "author": "Francesco Rolando",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ogekuri/GitHub-Template-NodeJS.git"
+  },
+  "main": "src/githubtemplatenodejs/index.js",
+  "bin": {
+    "githubtemplatenodejs": "src/githubtemplatenodejs/main.js"
+  },
+  "files": [
+    "src/githubtemplatenodejs/",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "test": "node --test \"tests/*.test.js\""
+  }
+}
