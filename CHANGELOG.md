@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.0.3](https://github.com/Ogekuri/GitHub-Template-NodeJS/releases/tag/v0.0.3) - 2026-11-24
+## [0.0.4](https://github.com/Ogekuri/GitHub-Template-NodeJS/releases/tag/v0.0.4) - 2026-11-24
 ### ⛰️  Features
 - Add .galias.conf file.
 
@@ -26,6 +26,12 @@
 - Update .gitignore file.
 
 ### 🚜  Changes
+- pin develop upgrade to develop branch and add --dev alias [useReq] *(management)*
+  REQ-032/REQ-036: develop upgrade now installs the GitHub develop branch via git+https://...GitHub-Template-NodeJS.git#develop (forced variant keeps --force per REQ-037).
+  REQ-034/REQ-048: --dev added as exact alias of --develop in dispatch and non-Linux manual fallback.
+  REQ-001/REQ-039: help Options section documents --dev and the develop-branch source.
+  README rows and help excerpt aligned with the mandated argv (DES-059, DES-019).
+  Tests: byte-exact help and argv oracles updated, four --dev alias dispatch and fallback cases added, TST-032 README contract updated; npm test 77/77 pass.
 - adapt galias ver_rules to NodeJS targets and add version consistency tests [useReq] *(galias-config)*
   Replace the Python/AstralUV ver_rules (src/**/*.py, pyproject.toml,
   uv.lock) with the NodeJS packaging rules for package.json and
@@ -41,6 +47,6 @@
 
 # History
 
-- \[0.0.3\]: https://github.com/Ogekuri/GitHub-Template-NodeJS/releases/tag/v0.0.3
+- \[0.0.4\]: https://github.com/Ogekuri/GitHub-Template-NodeJS/releases/tag/v0.0.4
 
-[0.0.3]: https://github.com/Ogekuri/GitHub-Template-NodeJS/releases/tag/v0.0.3
+[0.0.4]: https://github.com/Ogekuri/GitHub-Template-NodeJS/releases/tag/v0.0.4
