@@ -4,7 +4,7 @@
 > channels may change at any time without notice. Do not rely on it for
 > production workloads.
 
-# githubtemplatenodejs / templatenodejs (0.0.5)
+# githubtemplatenodejs / templatenodejs (0.0.6)
 
 <p align="center">
   <img src="https://img.shields.io/badge/node-24%2B-339933?style=flat-square&logo=node.js&logoColor=white" alt="NodeJS 24+">
@@ -138,7 +138,7 @@ The full help screen (printed by `--help` or by running the tool with no
 arguments):
 
 ```text
-Usage: githubtemplatenodejs [command] [options] (0.0.5)
+Usage: githubtemplatenodejs [command] [options] (0.0.6)
 
 Management Commands:
   --upgrade   - Reinstall githubtemplatenodejs on Linux; print manual command elsewhere.

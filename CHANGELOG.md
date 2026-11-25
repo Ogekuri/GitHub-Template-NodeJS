@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.0.5](https://github.com/Ogekuri/GitHub-Template-NodeJS/releases/tag/v0.0.5) - 2026-11-25
+## [0.0.6](https://github.com/Ogekuri/GitHub-Template-NodeJS/releases/tag/v0.0.6) - 2026-11-25
 ### ⛰️  Features
 - Add .galias.conf file.
 
@@ -23,6 +23,14 @@
   runtime docs WORKFLOW.md/REFERENCES.md.
 
 ### 🐛  Bug Fixes
+- publish ./dist/*.tgz file-spec operand for npm OIDC [useReq] *(release-npm)*
+  npm resolved the bare glob-expanded operand dist/githubtemplatenodejs-<v>.tgz
+  as the GitHub shortcut github:dist/... and ran git ls-remote over
+  ssh://git@github.com/dist/....git, failing with exit 128 publickey.
+  Prefixing the operand with ./ makes npm-package-arg classify it as a
+  file spec, so npm publish uploads the committed dist/ tarball via OIDC
+  trusted publishing (DES-017). Add a workflow-contract reproducer test
+  and update the strictly-related argv assertion; requirements unchanged.
 - Update .gitignore file.
 
 ### 🚜  Changes
@@ -47,6 +55,6 @@
 
 # History
 
-- \[0.0.5\]: https://github.com/Ogekuri/GitHub-Template-NodeJS/releases/tag/v0.0.5
+- \[0.0.6\]: https://github.com/Ogekuri/GitHub-Template-NodeJS/releases/tag/v0.0.6
 
-[0.0.5]: https://github.com/Ogekuri/GitHub-Template-NodeJS/releases/tag/v0.0.5
+[0.0.6]: https://github.com/Ogekuri/GitHub-Template-NodeJS/releases/tag/v0.0.6
