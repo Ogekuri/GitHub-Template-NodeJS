@@ -1626,7 +1626,32 @@ test("release workflow publish job is oidc master only", () => {
     assert.ok(block.includes("actions/checkout"), block);
     assert.ok(block.includes("actions/setup-node"), block);
     assert.ok(block.includes("registry-url: 'https://registry.npmjs.org'"), block);
-    assert.ok(block.includes("npm publish dist/*.tgz"), block);
+    assert.ok(block.includes("npm publish ./dist/*.tgz"), block);
+});
+
+test("release workflow publish tarball operand is file spec safe", () => {
+    /**
+     * @brief TST-015 support (DES-017): the npm publish operand resolves
+     *        as a tarball file spec, never a hosted-git shortcut.
+     * @details expected_output = the publish `run:` operand equals
+     *          `./dist/*.tgz` exactly; shell glob expansion preserves the
+     *          `./` prefix, so npm-package-arg classifies the expanded
+     *          tarball path as a file spec. A bare `dist/*.tgz` expands to
+     *          a single-slash relative path that parses as the GitHub
+     *          shortcut `github:dist/githubtemplatenodejs-<version>.tgz`,
+     *          making npm run `git ls-remote ssh://git@github.com/...`
+     *          which fails with `Permission denied (publickey)` and exit
+     *          code 128 (observed defect); expected_exception =
+     *          AssertionError when the publish `run:` line is missing or
+     *          the operand is not `./dist/*.tgz`.
+     */
+    const block = workflowJobBlock("publish-npm");
+    const publishLine = block.split("\n").find(
+        (line) => /^\s*run:\s*npm publish\s/.test(line),
+    );
+    assert.ok(publishLine !== undefined, block);
+    const operand = publishLine.replace(/^\s*run:\s*npm publish\s*/, "").trim();
+    assert.strictEqual(operand, "./dist/*.tgz");
 });
 
 test("release workflow release job runs for every tag", () => {
