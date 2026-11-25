@@ -294,7 +294,7 @@ test("notification colors embedded json contract", async (t) => {
         if (switchImplementation.failing) {
             throw new Error("HTTP Error 503: Service Unavailable");
         }
-        return { info: { version: "9.9.9" } };
+        return { version: "9.9.9" };
     });
     const first = await captureIO(() => versionCheck.runVersionCheck("0.0.0"));
     assert.ok(first.out().startsWith(prefixes.new_version_color), first.out());
@@ -324,7 +324,7 @@ test("parse version tolerates non integer components", async (t) => {
     t.mock.method(
         versionCheck,
         "fetchJson",
-        fetchJsonByUrl({ [EXPECTED_NPM_ENDPOINT]: { info: { version: "9.9.9rc1" } } }),
+        fetchJsonByUrl({ [EXPECTED_NPM_ENDPOINT]: { version: "9.9.9rc1" } }),
     );
     const parseCaptured = await captureIO(() => versionCheck.runVersionCheck("0.0.1"));
     const out = parseCaptured.out();
@@ -332,6 +332,36 @@ test("parse version tolerates non integer components", async (t) => {
     assert.ok(out.includes("(installed version: 0.0.1)"), out);
     assert.ok(!out.includes("\u001b[91m"), out);
     assertCacheFields(isolatedHome, 3600);
+});
+
+test("npm latest manifest shape and github user agent contract", async (t) => {
+    /**
+     * @brief Defect reproducer (REQ-009/REQ-028/REQ-029) L0: transport
+     *        payload and header contracts.
+     * @details expected_output = fetchLatestNpmVersion resolves the
+     *          top-level `version` field of the real npm `/latest`
+     *          manifest payload, and fetchLatestGithubVersion resolves the
+     *          `v`-stripped tag and sends the GitHub-mandatory non-empty
+     *          `User-Agent` header next to the Accept header;
+     *          expected_exception = none.
+     */
+    const fetchMock = t.mock.method(versionCheck, "fetchJson", async (url) => {
+        if (url === EXPECTED_NPM_ENDPOINT) {
+            return { version: "9.9.9" };
+        }
+        if (url === EXPECTED_GITHUB_ENDPOINT) {
+            return { tag_name: "v9.9.9" };
+        }
+        throw new Error("unexpected endpoint requested: " + url);
+    });
+    assert.strictEqual(await versionCheck.fetchLatestNpmVersion(), "9.9.9");
+    assert.strictEqual(await versionCheck.fetchLatestGithubVersion(), "9.9.9");
+    assert.strictEqual(fetchMock.mock.callCount(), 2);
+    assert.strictEqual(fetchMock.mock.calls[1].arguments[0], EXPECTED_GITHUB_ENDPOINT);
+    const githubHeaders = fetchMock.mock.calls[1].arguments[1];
+    assert.strictEqual(githubHeaders["Accept"], "application/vnd.github+json");
+    assert.strictEqual(typeof githubHeaders["User-Agent"], "string");
+    assert.notStrictEqual(githubHeaders["User-Agent"], "");
 });
 
 test("schema section lookup is public and case sensitive", (t) => {
@@ -745,7 +775,7 @@ test("absent cache triggers request with two second timeout", async (t) => {
     const fetchMock = t.mock.method(
         versionCheck,
         "fetchJson",
-        fetchJsonByUrl({ [EXPECTED_NPM_ENDPOINT]: { info: { version: "9.9.9" } } }),
+        fetchJsonByUrl({ [EXPECTED_NPM_ENDPOINT]: { version: "9.9.9" } }),
     );
     const runCaptured = await captureIO(() => versionCheck.runVersionCheck("0.0.0"));
     assert.strictEqual(fetchMock.mock.callCount(), 1);
@@ -779,7 +809,7 @@ test("expired cache triggers request", async (t) => {
     const fetchMock = t.mock.method(
         versionCheck,
         "fetchJson",
-        fetchJsonByUrl({ [EXPECTED_NPM_ENDPOINT]: { info: { version: "0.0.1" } } }),
+        fetchJsonByUrl({ [EXPECTED_NPM_ENDPOINT]: { version: "0.0.1" } }),
     );
     await captureIO(() => versionCheck.runVersionCheck("0.0.0"));
     assert.strictEqual(fetchMock.mock.callCount(), 1);
@@ -861,7 +891,7 @@ test("newer release prints green and writes cache 3600", async (t) => {
     t.mock.method(
         versionCheck,
         "fetchJson",
-        fetchJsonByUrl({ [EXPECTED_NPM_ENDPOINT]: { info: { version: "9.9.9" } } }),
+        fetchJsonByUrl({ [EXPECTED_NPM_ENDPOINT]: { version: "9.9.9" } }),
     );
     const runCaptured = await captureIO(() => versionCheck.runVersionCheck("0.0.0"));
     const out = runCaptured.out();
@@ -880,7 +910,7 @@ test("equal release no notification but cache refreshed", async (t) => {
     t.mock.method(
         versionCheck,
         "fetchJson",
-        fetchJsonByUrl({ [EXPECTED_NPM_ENDPOINT]: { info: { version: "0.0.0" } } }),
+        fetchJsonByUrl({ [EXPECTED_NPM_ENDPOINT]: { version: "0.0.0" } }),
     );
     const captured = await captureIO(() => versionCheck.runVersionCheck("0.0.0"));
     assert.strictEqual(captured.out(), "");
@@ -931,7 +961,7 @@ test("ver report prints aligned rows despite fresh cache", async (t) => {
      */
     seedCache(isolatedHome, Date.now() / 1000 + 9999);
     const fetchMock = t.mock.method(versionCheck, "fetchJson", fetchJsonByUrl({
-        [EXPECTED_NPM_ENDPOINT]: { info: { version: "9.9.9" } },
+        [EXPECTED_NPM_ENDPOINT]: { version: "9.9.9" },
         [EXPECTED_GITHUB_ENDPOINT]: { tag_name: "v8.8.8" },
     }));
     const captured = await captureIO(() => core.main(["--ver"]));
@@ -985,7 +1015,7 @@ test("ver report marks failed github source unknown", async (t) => {
         if (url === EXPECTED_GITHUB_ENDPOINT) {
             throw new Error("HTTPS request timed out after 2 seconds");
         }
-        return { info: { version: "9.9.9" } };
+        return { version: "9.9.9" };
     });
     const captured = await captureIO(() => core.main(["--ver"]));
     const out = captured.out();
@@ -1008,7 +1038,7 @@ test("ver report active when version check disabled", async (t) => {
     seedConfig(isolatedHome, '{"version_check": {"disable-version-check": "yes"}}\n');
     assert.strictEqual(config.versionCheckDisabled(), true);
     const fetchMock = t.mock.method(versionCheck, "fetchJson", fetchJsonByUrl({
-        [EXPECTED_NPM_ENDPOINT]: { info: { version: "9.9.9" } },
+        [EXPECTED_NPM_ENDPOINT]: { version: "9.9.9" },
         [EXPECTED_GITHUB_ENDPOINT]: { tag_name: "v8.8.8" },
     }));
     const captured = await captureIO(() => core.main(["--ver"]));
@@ -1096,7 +1126,7 @@ test("cache write failure does not abort dispatch", { skip: process.getuid === u
     t.mock.method(
         versionCheck,
         "fetchJson",
-        fetchJsonByUrl({ [EXPECTED_NPM_ENDPOINT]: { info: { version: "9.9.9" } } }),
+        fetchJsonByUrl({ [EXPECTED_NPM_ENDPOINT]: { version: "9.9.9" } }),
     );
     try {
         const captured = await captureIO(() => core.main([]));

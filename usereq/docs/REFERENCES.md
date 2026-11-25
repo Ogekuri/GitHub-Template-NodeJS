@@ -1123,7 +1123,7 @@ otherwise the `npm` process exit code.
 
 ---
 
-# version_check.js | JavaScript | 611L | 33 symbols | 0 imports | 29 comments
+# version_check.js | JavaScript | 618L | 33 symbols | 0 imports | 29 comments
 > Path: `src/githubtemplatenodejs/version_check.js`
 - @brief Online new-version check and dual-source version report executed
 before CLI argument parsing.
@@ -1140,65 +1140,67 @@ best effort and never aborts dispatch (REQ-046).
 
 ## Definitions
 
-### mod `const fs = require("fs")` (L17-26)
+### mod `const fs = require("fs")` (L17-28)
 
-### mod `const https = require("https")` (L18-26)
+### mod `const https = require("https")` (L18-28)
 
-### mod `const os = require("os")` (L19-26)
+### mod `const os = require("os")` (L19-28)
 
-### mod `const path = require("path")` (L20-26)
+### mod `const path = require("path")` (L20-28)
 
-### mod `const colors = require("./colors")` (L21-26)
+### mod `const colors = require("./colors")` (L21-28)
 
-- const `const NPM_JSON_ENDPOINT = "https://registry.npmjs.org/githubtemplatenodejs/latest";` (L30)
+- const `const NPM_JSON_ENDPOINT = "https://registry.npmjs.org/githubtemplatenodejs/latest";` (L32)
 - @brief npm registry JSON API endpoint returning the latest published
 version metadata (REQ-009, REQ-028).
-- @details Payload shape: `{"info": {"version": "x.y.z"}}`; hardcoded
-constant, not configurable (CTN-008).
+- @details Payload shape: the version manifest of the latest published
+release, carrying the latest version at the top-level
+`version` field (`{"name": ..., "version": "x.y.z", ...}`);
+hardcoded constant, not configurable (CTN-008).
 - @satisfies REQ-009 REQ-028
-- const `const GITHUB_RELEASES_ENDPOINT = (` (L39)
+- const `const GITHUB_RELEASES_ENDPOINT = (` (L41)
 - @brief GitHub API endpoint returning the latest release metadata.
 - @details Source of the report `Latest @ GitHub` row (REQ-029) and of
 the `--upgrade --develop` download source (REQ-032);
 hardcoded constant, not configurable (CTN-008).
 - @satisfies REQ-029
-- const `const HTTP_TIMEOUT_SECONDS = 2;` (L48)
+- const `const HTTP_TIMEOUT_SECONDS = 2;` (L50)
 - @brief HTTPS request timeout in seconds, hardcoded (CTN-006).
 - @satisfies CTN-006
-- const `const IDLE_DELAY_SUCCESS_SECONDS = 3600;` (L54)
+- const `const IDLE_DELAY_SUCCESS_SECONDS = 3600;` (L56)
 - @brief Idle-delay in seconds after every successful check (CTN-007).
 - @satisfies CTN-007 REQ-011 REQ-013
-- const `const IDLE_DELAY_FAILURE_SECONDS = 86400;` (L60)
+- const `const IDLE_DELAY_FAILURE_SECONDS = 86400;` (L62)
 - @brief Idle-delay in seconds after any failed check (CTN-007).
 - @satisfies CTN-007 REQ-011 REQ-015
-- const `const CACHE_RELATIVE_SEGMENTS = [` (L66)
+- const `const CACHE_RELATIVE_SEGMENTS = [` (L68)
 - @brief Cache file location segments relative to `$HOME` (DES-007).
 - @satisfies DES-007 CTN-008
-- const `const ANSI_RESET = "\u001b[0m";` (L79)
+- const `const ANSI_RESET = "\u001b[0m";` (L81)
 - @brief ANSI SGR reset suffix closing colored notifications.
 - @details Notification prefix colors come from the hardcoded embedded
 color JSON (`colors.notificationColors`, REQ-026); only the
 reset suffix stays local.
 - @satisfies REQ-026 DES-008
-- const `const REPORT_LABEL_INSTALLED = "Current Installed";` (L85)
+- const `const REPORT_LABEL_INSTALLED = "Current Installed";` (L87)
 - @brief Report row label for the installed version (REQ-027).
 - @satisfies REQ-027
-- const `const REPORT_LABEL_NPM = "Latest @ npm";` (L91)
+- const `const REPORT_LABEL_NPM = "Latest @ npm";` (L93)
 - @brief Report row label for the npm registry latest version (REQ-027).
 - @satisfies REQ-027 REQ-028
-- const `const REPORT_LABEL_GITHUB = "Latest @ GitHub";` (L97)
+- const `const REPORT_LABEL_GITHUB = "Latest @ GitHub";` (L99)
 - @brief Report row label for the GitHub latest release version (REQ-027).
 - @satisfies REQ-027 REQ-029
-- const `const REPORT_LABEL_WIDTH = REPORT_LABEL_INSTALLED.length;` (L105)
+- const `const REPORT_LABEL_WIDTH = REPORT_LABEL_INSTALLED.length;` (L107)
 - @brief Label pad width keeping report version columns aligned (REQ-027).
 - @details Equals the length of the longest label
 `Current Installed` (17 characters).
 - @satisfies REQ-027
-- const `const REPORT_UNKNOWN = "unknown";` (L112)
+- const `const REPORT_UNKNOWN = "unknown";` (L114)
 - @brief Placeholder replacing the version of a failed report source
 before the reason suffix is appended (REQ-030).
 - @satisfies REQ-030
-### fn `function cachePath()` (L122-127)
+### fn `function cachePath()` (L124-129)
 - @brief Resolve the absolute cache file path from `$HOME`.
 - @details Prefers the `HOME` environment variable (CTN-008); falls back
 to `os.homedir()` when unset. Does not create directories.
@@ -1206,7 +1208,7 @@ Complexity: O(1).
 - @return {string} Absolute cache file path.
 - @satisfies DES-007 CTN-008
 
-### fn `function readCache(cacheFile)` (L138-147)
+### fn `function readCache(cacheFile)` (L140-149)
 - @brief Load the idle-time cache JSON document.
 - @details Returns null when the file is absent, unreadable, unparsable,
 or not a JSON object; callers treat null as cache-miss.
@@ -1215,14 +1217,14 @@ Complexity: O(file size).
 - @return {Object|null} Parsed cache payload or null.
 - @satisfies REQ-008
 
-### fn `function humanTimestamp(epochSeconds)` (L156-159)
+### fn `function humanTimestamp(epochSeconds)` (L158-161)
 - @brief Format an epoch value as UTC ISO-8601.
 - @details Renders `YYYY-MM-DDTHH:MM:SSZ` by stripping the millisecond
 fraction from `Date.toISOString`. Complexity: O(1).
 - @param {number} epochSeconds Epoch seconds to render.
 - @return {string} Timestamp shaped `YYYY-MM-DDTHH:MM:SSZ`.
 
-### fn `function writeCache(cacheFile, checkEpoch, idleDelaySeconds)` (L180-195)
+### fn `function writeCache(cacheFile, checkEpoch, idleDelaySeconds)` (L182-197)
 - @brief Persist the four-field idle-time cache document.
 - @details Creates missing parent directories. Field names follow A-03.
 Persistence is best effort (REQ-046): any filesystem error
@@ -1241,7 +1243,7 @@ last_check_epoch, last_check_human, idle_time_epoch,
 idle_time_human; on write failure the prior cache state survives
 as-is and callers continue normally.
 
-### fn `function gateAllowsRequest(cache, nowEpoch)` (L207-216)
+### fn `function gateAllowsRequest(cache, nowEpoch)` (L209-218)
 - @brief Evaluate the idle-time request gate.
 - @details Gate opens on cache-miss (null), non-numeric
 `idle_time_epoch`, or `nowEpoch >= idleTimeEpoch`; otherwise
@@ -1251,7 +1253,7 @@ it stays closed. Complexity: O(1).
 - @return {boolean} True when an HTTPS request is permitted.
 - @satisfies REQ-008
 
-### fn `function parseVersion(version)` (L231-249)
+### fn `function parseVersion(version)` (L233-251)
 - @brief Parse a dotted version string into a comparable component array.
 - @details Strips one leading `v`/`V` prefix, then maps every
 dot-separated component to its leading ASCII-digit value
@@ -1264,7 +1266,7 @@ failure. Complexity: O(len(version)).
 compare as zero through `compareVersions`.
 - @satisfies REQ-047
 
-### fn `function compareVersions(left, right)` (L262-272)
+### fn `function compareVersions(left, right)` (L264-274)
 - @brief Compare two version component arrays element-wise.
 - @details Missing components compare as zero (REQ-047), so `[0, 0, 1]`
 < `[0, 0, 1, 0]` is false and `[0, 0, 7]` < `[0, 0, 7, 1]` is
@@ -1275,7 +1277,7 @@ true. Complexity: O(max(len(a), len(b))).
 left > right, 0 when equal.
 - @satisfies REQ-047
 
-### fn `function fetchJson(url, headers, timeoutSeconds)` (L297-336)
+### fn `function fetchJson(url, headers, timeoutSeconds)` (L299-338)
 - @brief GET one HTTPS URL and resolve its JSON payload.
 - @details Uses the Node.js standard library `https` module (A-08); no
 third-party HTTP library. Applies `timeoutSeconds` via the
@@ -1298,30 +1300,35 @@ or unparsable JSON payload; the message names the encountered
 error.
 - @satisfies A-08 CTN-006
 
-### fn `async function fetchLatestNpmVersion()` (L349-361)
+### fn `async function fetchLatestNpmVersion()` (L353-364)
 - @brief GET the npm registry payload and extract the latest version.
 - @details Sends a plain GET to the npm registry JSON API; no Accept
-header is required. Payload shape:
-`{"info": {"version": "x.y.z"}}`. Complexity: O(body size).
+header is required. The `/latest` endpoint responds with the
+version manifest of the latest published release, carrying
+the latest version at the top-level `version` field.
+Complexity: O(body size).
 - @return {Promise<string>} Latest published version in `x.y.z` format.
 - @throws {Error} On HTTP and network failures (e.g. HTTP 429, 503),
 on the 2-second timeout expiry, or on unparsable payload or
 missing version.
 - @satisfies REQ-009 REQ-028 CTN-006
 
-### fn `async function fetchLatestGithubVersion()` (L375-390)
+### fn `async function fetchLatestGithubVersion()` (L381-397)
 - @brief GET the latest GitHub release payload and extract its version.
-- @details Strips one leading `v`/`V` prefix from `tag_name`; the
-returned value is exactly the version downloaded by
-`--upgrade --develop` (REQ-032) regardless of the branch the
-release was tagged on. Complexity: O(body size).
+- @details Sends the GitHub-mandatory `User-Agent` header next to the
+`Accept` header; the GitHub API rejects requests without a
+`User-Agent` header with HTTP 403 Forbidden. Strips one
+leading `v`/`V` prefix from `tag_name`; the returned value is
+exactly the version downloaded by `--upgrade --develop`
+(REQ-032) regardless of the branch the release was tagged on.
+Complexity: O(body size).
 - @return {Promise<string>} Latest release version in `x.y.z` format.
 - @throws {Error} On HTTP and network failures (e.g. HTTP 429, 503),
 on the 2-second timeout expiry, or on unparsable payload or
 missing tag_name.
 - @satisfies REQ-029 CTN-006
 
-### fn `function formatReportRow(label, value)` (L402-405)
+### fn `function formatReportRow(label, value)` (L409-412)
 - @brief Render one report row with the label padded to 17 columns.
 - @details Label is padded with trailing spaces to
 `REPORT_LABEL_WIDTH` (REQ-027). Complexity: O(17 + value).
@@ -1331,7 +1338,7 @@ placeholder.
 - @return {string} Row shaped `<label padded to 17> : <value>` (REQ-027).
 - @satisfies REQ-027
 
-### fn `function unknownValue(reason)` (L418-423)
+### fn `function unknownValue(reason)` (L425-430)
 - @brief Render the failed-source placeholder with its reason.
 - @details REQ-030 mandates the `unknown (<reason>)` shape, where
 `<reason>` names the actually encountered error (e.g. an HTTP
@@ -1342,7 +1349,7 @@ the bare `unknown` placeholder. Complexity: O(reason).
 empty.
 - @satisfies REQ-030
 
-### fn `function printColored(color, message)` (L434-436)
+### fn `function printColored(color, message)` (L441-443)
 - @brief Print a message wrapped in an ANSI color prefix and reset.
 - @details Exactly one stdout line: prefix + message + `ANSI_RESET` +
 newline. Side effect: one stdout write. Complexity: O(message).
@@ -1351,7 +1358,7 @@ newline. Side effect: one stdout write. Complexity: O(message).
 - @return {undefined}
 - @satisfies DES-008 REQ-026
 
-### fn `function reportFailure(checkEpoch, error, color)` (L448-455)
+### fn `function reportFailure(checkEpoch, error, color)` (L455-462)
 - @brief Emit the failure note and write the 86400 s cache.
 - @details The note renders with the hardcoded error color (REQ-026);
 the cache write is best effort (REQ-046). Complexity: O(1).
@@ -1361,7 +1368,7 @@ the cache write is best effort (REQ-046). Complexity: O(1).
 - @return {undefined}
 - @satisfies REQ-014 REQ-015 REQ-026 REQ-046 A-05
 
-### fn `async function runVersionCheck(installedVersion, force)` (L479-507)
+### fn `async function runVersionCheck(installedVersion, force)` (L486-514)
 - @brief Execute the gated (or forced) online version check on npm.
 - @details Flow: cache read -> gate evaluation (skipped when `force`) ->
 npm registry fetch -> version compare -> notify -> cache
@@ -1383,7 +1390,7 @@ and stay active regardless of the switch (REQ-045).
 - @satisfies REQ-007 REQ-008 REQ-009 REQ-010 REQ-011 REQ-012 REQ-013
 REQ-014 REQ-015 REQ-026 REQ-046 REQ-047
 
-### fn `async function runVersionReport(installedVersion)` (L530-583)
+### fn `async function runVersionReport(installedVersion)` (L537-590)
 - @brief Execute the forced dual-source version report (`--ver`).
 - @details Flow: fetch npm registry -> fetch GitHub releases -> emit the
 three aligned rows. Each failed fetch emits one bright red
@@ -1407,39 +1414,39 @@ REQ-045 REQ-046
 ## Symbol Index
 |Symbol|Kind|Vis|Lines|Sig|
 |---|---|---|---|---|
-|`fs`|mod||17-26||
-|`https`|mod||18-26||
-|`os`|mod||19-26||
-|`path`|mod||20-26||
-|`colors`|mod||21-26||
-|`NPM_JSON_ENDPOINT`|const||30||
-|`GITHUB_RELEASES_ENDPOINT`|const||39||
-|`HTTP_TIMEOUT_SECONDS`|const||48||
-|`IDLE_DELAY_SUCCESS_SECONDS`|const||54||
-|`IDLE_DELAY_FAILURE_SECONDS`|const||60||
-|`CACHE_RELATIVE_SEGMENTS`|const||66||
-|`ANSI_RESET`|const||79||
-|`REPORT_LABEL_INSTALLED`|const||85||
-|`REPORT_LABEL_NPM`|const||91||
-|`REPORT_LABEL_GITHUB`|const||97||
-|`REPORT_LABEL_WIDTH`|const||105||
-|`REPORT_UNKNOWN`|const||112||
-|`cachePath`|fn||122-127|function cachePath()|
-|`readCache`|fn||138-147|function readCache(cacheFile)|
-|`humanTimestamp`|fn||156-159|function humanTimestamp(epochSeconds)|
-|`writeCache`|fn||180-195|function writeCache(cacheFile, checkEpoch, idleDelaySeconds)|
-|`gateAllowsRequest`|fn||207-216|function gateAllowsRequest(cache, nowEpoch)|
-|`parseVersion`|fn||231-249|function parseVersion(version)|
-|`compareVersions`|fn||262-272|function compareVersions(left, right)|
-|`fetchJson`|fn||297-336|function fetchJson(url, headers, timeoutSeconds)|
-|`fetchLatestNpmVersion`|fn||349-361|async function fetchLatestNpmVersion()|
-|`fetchLatestGithubVersion`|fn||375-390|async function fetchLatestGithubVersion()|
-|`formatReportRow`|fn||402-405|function formatReportRow(label, value)|
-|`unknownValue`|fn||418-423|function unknownValue(reason)|
-|`printColored`|fn||434-436|function printColored(color, message)|
-|`reportFailure`|fn||448-455|function reportFailure(checkEpoch, error, color)|
-|`runVersionCheck`|fn||479-507|async function runVersionCheck(installedVersion, force)|
-|`runVersionReport`|fn||530-583|async function runVersionReport(installedVersion)|
+|`fs`|mod||17-28||
+|`https`|mod||18-28||
+|`os`|mod||19-28||
+|`path`|mod||20-28||
+|`colors`|mod||21-28||
+|`NPM_JSON_ENDPOINT`|const||32||
+|`GITHUB_RELEASES_ENDPOINT`|const||41||
+|`HTTP_TIMEOUT_SECONDS`|const||50||
+|`IDLE_DELAY_SUCCESS_SECONDS`|const||56||
+|`IDLE_DELAY_FAILURE_SECONDS`|const||62||
+|`CACHE_RELATIVE_SEGMENTS`|const||68||
+|`ANSI_RESET`|const||81||
+|`REPORT_LABEL_INSTALLED`|const||87||
+|`REPORT_LABEL_NPM`|const||93||
+|`REPORT_LABEL_GITHUB`|const||99||
+|`REPORT_LABEL_WIDTH`|const||107||
+|`REPORT_UNKNOWN`|const||114||
+|`cachePath`|fn||124-129|function cachePath()|
+|`readCache`|fn||140-149|function readCache(cacheFile)|
+|`humanTimestamp`|fn||158-161|function humanTimestamp(epochSeconds)|
+|`writeCache`|fn||182-197|function writeCache(cacheFile, checkEpoch, idleDelaySeconds)|
+|`gateAllowsRequest`|fn||209-218|function gateAllowsRequest(cache, nowEpoch)|
+|`parseVersion`|fn||233-251|function parseVersion(version)|
+|`compareVersions`|fn||264-274|function compareVersions(left, right)|
+|`fetchJson`|fn||299-338|function fetchJson(url, headers, timeoutSeconds)|
+|`fetchLatestNpmVersion`|fn||353-364|async function fetchLatestNpmVersion()|
+|`fetchLatestGithubVersion`|fn||381-397|async function fetchLatestGithubVersion()|
+|`formatReportRow`|fn||409-412|function formatReportRow(label, value)|
+|`unknownValue`|fn||425-430|function unknownValue(reason)|
+|`printColored`|fn||441-443|function printColored(color, message)|
+|`reportFailure`|fn||455-462|function reportFailure(checkEpoch, error, color)|
+|`runVersionCheck`|fn||486-514|async function runVersionCheck(installedVersion, force)|
+|`runVersionReport`|fn||537-590|async function runVersionReport(installedVersion)|
 
 
 ---

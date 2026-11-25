@@ -23,8 +23,10 @@ const colors = require("./colors");
 /**
  * @brief npm registry JSON API endpoint returning the latest published
  *        version metadata (REQ-009, REQ-028).
- * @details Payload shape: `{"info": {"version": "x.y.z"}}`; hardcoded
- *          constant, not configurable (CTN-008).
+ * @details Payload shape: the version manifest of the latest published
+ *          release, carrying the latest version at the top-level
+ *          `version` field (`{"name": ..., "version": "x.y.z", ...}`);
+ *          hardcoded constant, not configurable (CTN-008).
  * @satisfies REQ-009 REQ-028
  */
 const NPM_JSON_ENDPOINT = "https://registry.npmjs.org/githubtemplatenodejs/latest";
@@ -338,8 +340,10 @@ function fetchJson(url, headers, timeoutSeconds) {
 /**
  * @brief GET the npm registry payload and extract the latest version.
  * @details Sends a plain GET to the npm registry JSON API; no Accept
- *          header is required. Payload shape:
- *          `{"info": {"version": "x.y.z"}}`. Complexity: O(body size).
+ *          header is required. The `/latest` endpoint responds with the
+ *          version manifest of the latest published release, carrying
+ *          the latest version at the top-level `version` field.
+ *          Complexity: O(body size).
  * @return {Promise<string>} Latest published version in `x.y.z` format.
  * @throws {Error} On HTTP and network failures (e.g. HTTP 429, 503),
  *         on the 2-second timeout expiry, or on unparsable payload or
@@ -348,24 +352,26 @@ function fetchJson(url, headers, timeoutSeconds) {
  */
 async function fetchLatestNpmVersion() {
     const payload = await module.exports.fetchJson(NPM_JSON_ENDPOINT);
-    const info = (
-        payload !== null && typeof payload === "object" ? payload.info : undefined
-    );
     const version = (
-        info !== null && typeof info === "object" ? info.version : undefined
+        payload !== null && typeof payload === "object"
+        ? payload.version
+        : undefined
     );
     if (typeof version !== "string" || version === "") {
-        throw new Error("npm payload misses info.version");
+        throw new Error("npm payload misses version");
     }
     return version;
 }
 
 /**
  * @brief GET the latest GitHub release payload and extract its version.
- * @details Strips one leading `v`/`V` prefix from `tag_name`; the
- *          returned value is exactly the version downloaded by
- *          `--upgrade --develop` (REQ-032) regardless of the branch the
- *          release was tagged on. Complexity: O(body size).
+ * @details Sends the GitHub-mandatory `User-Agent` header next to the
+ *          `Accept` header; the GitHub API rejects requests without a
+ *          `User-Agent` header with HTTP 403 Forbidden. Strips one
+ *          leading `v`/`V` prefix from `tag_name`; the returned value is
+ *          exactly the version downloaded by `--upgrade --develop`
+ *          (REQ-032) regardless of the branch the release was tagged on.
+ *          Complexity: O(body size).
  * @return {Promise<string>} Latest release version in `x.y.z` format.
  * @throws {Error} On HTTP and network failures (e.g. HTTP 429, 503),
  *         on the 2-second timeout expiry, or on unparsable payload or
@@ -375,6 +381,7 @@ async function fetchLatestNpmVersion() {
 async function fetchLatestGithubVersion() {
     const payload = await module.exports.fetchJson(GITHUB_RELEASES_ENDPOINT, {
         "Accept": "application/vnd.github+json",
+        "User-Agent": "githubtemplatenodejs",
     });
     const tagName = (
         payload !== null && typeof payload === "object"
