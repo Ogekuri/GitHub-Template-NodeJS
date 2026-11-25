@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.0.6](https://github.com/Ogekuri/GitHub-Template-NodeJS/releases/tag/v0.0.6) - 2026-11-25
+## [0.0.7](https://github.com/Ogekuri/GitHub-Template-NodeJS/releases/tag/v0.0.7) - 2026-11-25
 ### ⛰️  Features
 - Add .galias.conf file.
 
@@ -23,6 +23,19 @@
   runtime docs WORKFLOW.md/REFERENCES.md.
 
 ### 🐛  Bug Fixes
+- read npm top-level version and send GitHub User-Agent [useReq] *(version-check)*
+  The npm /latest endpoint returns the version manifest with the latest
+  version at the top-level 'version' field; the extractor read the
+  nonexistent 'info.version' path and every check failed with
+  'npm payload misses info.version'.
+  The GitHub API rejects requests without a User-Agent header with
+  HTTP 403 Forbidden; fetchLatestGithubVersion now sends the mandatory
+  'User-Agent: githubtemplatenodejs' header next to Accept.
+  Add the failing L0 reproducer test 'npm latest manifest shape and
+  github user agent contract' and align the ten mocked npm payload
+  fixtures with the real /latest manifest shape.
+  Update WORKFLOW.md communication-edge payloads and regenerate
+  REFERENCES.md; requirements unchanged (REQ-009/REQ-028/REQ-029).
 - publish ./dist/*.tgz file-spec operand for npm OIDC [useReq] *(release-npm)*
   npm resolved the bare glob-expanded operand dist/githubtemplatenodejs-<v>.tgz
   as the GitHub shortcut github:dist/... and ran git ls-remote over
@@ -55,6 +68,6 @@
 
 # History
 
-- \[0.0.6\]: https://github.com/Ogekuri/GitHub-Template-NodeJS/releases/tag/v0.0.6
+- \[0.0.7\]: https://github.com/Ogekuri/GitHub-Template-NodeJS/releases/tag/v0.0.7
 
-[0.0.6]: https://github.com/Ogekuri/GitHub-Template-NodeJS/releases/tag/v0.0.6
+[0.0.7]: https://github.com/Ogekuri/GitHub-Template-NodeJS/releases/tag/v0.0.7
