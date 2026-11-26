@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.0.7](https://github.com/Ogekuri/GitHub-Template-NodeJS/releases/tag/v0.0.7) - 2026-11-25
+## [0.0.8](https://github.com/Ogekuri/GitHub-Template-NodeJS/releases/tag/v0.0.8) - 2026-11-26
 ### ⛰️  Features
 - Add .galias.conf file.
 
@@ -47,6 +47,8 @@
 - Update .gitignore file.
 
 ### 🚜  Changes
+- deploy CLI under long and short bin names [useReq] *(packaging)*
+  REQUIREMENTS: DES-003 mandates exactly two bin entry points (githubtemplatenodejs, templatenodejs) both invoking src/githubtemplatenodejs/main.js; TST-031 and A-11 updated accordingly. package.json: bin adds the templatenodejs short-name entry mapping to the same CLI dispatcher. tests: TST-031 packaging assertion extended to both entries; full npm test suite passes 79/79. WORKFLOW: PROC:main entrypoints record the dual-name npm bin deployment.
 - pin develop upgrade to develop branch and add --dev alias [useReq] *(management)*
   REQ-032/REQ-036: develop upgrade now installs the GitHub develop branch via git+https://...GitHub-Template-NodeJS.git#develop (forced variant keeps --force per REQ-037).
   REQ-034/REQ-048: --dev added as exact alias of --develop in dispatch and non-Linux manual fallback.
@@ -68,6 +70,6 @@
 
 # History
 
-- \[0.0.7\]: https://github.com/Ogekuri/GitHub-Template-NodeJS/releases/tag/v0.0.7
+- \[0.0.8\]: https://github.com/Ogekuri/GitHub-Template-NodeJS/releases/tag/v0.0.8
 
-[0.0.7]: https://github.com/Ogekuri/GitHub-Template-NodeJS/releases/tag/v0.0.7
+[0.0.8]: https://github.com/Ogekuri/GitHub-Template-NodeJS/releases/tag/v0.0.8
