@@ -16,7 +16,7 @@ This document MUST follow these authoring rules (LLM-first, normative SRS):
   - Do NOT add YAML front matter or in-document revision history; use git history / CHANGELOG.md for change tracking.
 
 ### 1.2 Project Scope
-Project `githubtemplatenodejs`: a Node.js CLI application published on npm (`https://www.npmjs.com/package/githubtemplatenodejs`) and distributed as a global npm tool via `npm install -g githubtemplatenodejs` or executed on-the-fly via `npx githubtemplatenodejs`; `git+https://github.com/Ogekuri/GitHub-Template-NodeJS.git#develop` remains the optional development source (develop branch) of the `--upgrade --develop` / `--upgrade --dev` variants; the repository doubles as the GitHub template `Ogekuri/GitHub-Template-NodeJS` ("GitHub template for NodeJS app", author Francesco Rolando); `scripts/rename-me.sh` instantiates a copied template into a renamed project across file contents, filenames, and paths.
+Project `githubtemplatenodejs`: a Node.js CLI application published on npm (`https://www.npmjs.com/package/githubtemplatenodejs`) and distributed as a global npm tool via `npm install -g githubtemplatenodejs` or executed on-the-fly via `npx githubtemplatenodejs`; the global installation deploys the program under the long name `githubtemplatenodejs` and the short name `templatenodejs` (DES-003); `git+https://github.com/Ogekuri/GitHub-Template-NodeJS.git#develop` remains the optional development source (develop branch) of the `--upgrade --develop` / `--upgrade --dev` variants; the repository doubles as the GitHub template `Ogekuri/GitHub-Template-NodeJS` ("GitHub template for NodeJS app", author Francesco Rolando); `scripts/rename-me.sh` instantiates a copied template into a renamed project across file contents, filenames, and paths.
 
 Interface: text-only CLI in English; no GUI functionality is requested. Functional areas: management commands (`--help`, `--ver`, `--version`, `--upgrade`, `--uninstall`, with the `--develop` (alias `--dev`) source modifier of `--upgrade`) independent from core logic; automatic online new-version check against the npm registry throttled by an idle-time JSON cache; `--ver` dual-source report covering npm and GitHub; colored console notifications. Configurability: version-check parameters (endpoint, timeout, and idle-delays) remain hardcoded constants and stay unexposed (CTN-008); the automatic online check itself is switchable through the schema parameter `version_check:disable-version-check` (REQ-042..REQ-045); the cache location derives from the `$HOME` environment variable; notification colors are hardcoded in the embedded internal color JSON of the dedicated module `colors.js` (REQ-040); a JSON configuration CLI (`--get`, `--set`, `--unset`, `--print`, `--info`, `--print-raw`) persists schema state at `$HOME/.config/githubtemplatenodejs/config.json`. No application project-local configuration layer exists. Performance constraints: HTTPS timeout of 2 seconds; cache gating avoids redundant network calls.
 
@@ -57,7 +57,7 @@ Assumptions (non-normative; reversible interpretations of unspecified details):
 - **A-08**: The HTTPS client uses the Node.js standard library (`https` module or global `fetch`); no third-party HTTP library is mandated.
 - **A-09**: "Linux" detection MAY use `process.platform === "linux"` or equivalent; all other platforms take the manual-command branch.
 - **A-10**: No unit tests were explicitly requested; Section 4 defines verification procedures for downstream development.
-- **A-11**: The `bin` entry point name equals `%PROGRAM%` (`githubtemplatenodejs`).
+- **A-11**: The `bin` entry point names equal `%PROGRAM%` (`githubtemplatenodejs`) and `%SHORTNAME%` (`templatenodejs`).
 - **A-12**: The renamed skeleton copy (`src/templatenodejs/`) and the distributed application sources (`src/githubtemplatenodejs/`) coexist as prescribed by the user request.
 - **A-13**: The GitHub breaking change rolling the `ubuntu-latest` label to Ubuntu 26.04 (October 19 - November 19, 2026) is mitigated by pinning the release-workflow runner to the explicit `ubuntu-24.04` label (behavior-preserving mitigation) instead of adopting `ubuntu-26.04`.
 - **A-14**: After `scripts/rename-me.sh` execution, `package-lock.json` may hold stale package names and hashes; refreshing it via `npm install` is a post-rename user step outside the script scope.
@@ -98,7 +98,7 @@ Assumptions (non-normative; reversible interpretations of unspecified details):
 ### 3.1 Design and Implementation
 - **DES-001**: MUST implement the application in Node.js with `package.json` packaging metadata compatible with `npm pack`, `npm install -g`, and `npx`.
 - **DES-002**: MUST declare in `package.json` every file and directory required for `.github/workflows/release-npm.yml` to build a complete distributable package.
-- **DES-003**: MUST expose exactly one `bin` entry point, named `githubtemplatenodejs`, invoking the CLI defined in `src/githubtemplatenodejs/main.js`.
+- **DES-003**: MUST expose exactly two `bin` entry points, named `githubtemplatenodejs` and `templatenodejs`, both invoking the CLI defined in `src/githubtemplatenodejs/main.js`.
 - **DES-004**: MUST place application sources under `src/githubtemplatenodejs/` with the CLI entry in `main.js` and core logic in `core.js`, mirroring the skeleton layout.
 - **DES-005**: MUST isolate management commands (`--help`, `--ver`, `--version`, `--upgrade`, `--uninstall`) from core logic in a dedicated module or clearly separated functions.
 - **DES-006**: MUST isolate the online version check (HTTPS query, cache persistence, notification rendering) in a dedicated component invoked before argument parsing.
@@ -308,7 +308,7 @@ Options:
 - **TST-028**: MUST verify REQ-047 with a mocked npm version carrying a non-integer suffix (e.g. `9.9.9rc1`): no error note prints and comparison uses leading integers.
 - **TST-029**: MUST verify CTN-012 and CTN-013 against `scripts/templatenodejs.sh`: a `node`-less PATH exits non-zero with a diagnostic and the delegation argv invokes `src/templatenodejs/main.js`.
 - **TST-030**: MUST verify DES-057 by parsing `package.json`: `engines.node` declares a semver range pinning the minimum Node.js runtime.
-- **TST-031**: MUST verify DES-003 by parsing `package.json`: `bin` declares exactly the `githubtemplatenodejs` entry point.
+- **TST-031**: MUST verify DES-003 by parsing `package.json`: `bin` declares exactly the `githubtemplatenodejs` and `templatenodejs` entries, both resolving to `src/githubtemplatenodejs/main.js`.
 - **TST-032**: MUST verify DES-059 and DES-060 by parsing `README.md`: upgrade rows match the mandated argv and no schema-empty or configurable-color claims remain.
 - **TST-033**: MUST verify `scripts/rename-me.sh` by copying the template working tree into `temp/`, executing the copied script with all seven parameters, and asserting exit status 0.
 - **TST-034**: MUST pass TST-033 iff no source string remains in any copied text-file content, filename, or path (binary archives excluded from content scanning).

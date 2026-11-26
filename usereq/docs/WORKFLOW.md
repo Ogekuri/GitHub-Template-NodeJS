@@ -8,7 +8,8 @@ paths only; no line numbers. Process IDs are stable.
 | ID | Type | Parent process | Role | Entrypoint symbol(s) | Defining file(s) |
 | --- | --- | --- | --- | --- | --- |
 | `PROC:launcher` | process | none (user shell) | Local-run wrapper resolving the project root, validating `node`, and delegating to the skeleton CLI entry | `scripts/templatenodejs.sh` (bash top-level execution) | `scripts/templatenodejs.sh` |
-| `PROC:main` | process | `PROC:launcher` (via `exec` replacement) or user interpreter (`node`, `npm install -g` bin, `npx`) | CLI application process: gated version check plus management-command and configuration-CLI dispatch | `src/githubtemplatenodejs/main.js` (npm `bin` entry); `src/templatenodejs/main.js` (launcher delegation) | `src/githubtemplatenodejs/main.js`, `src/githubtemplatenodejs/index.js`, `src/templatenodejs/main.js`, `src/templatenodejs/core.js`, `src/githubtemplatenodejs/core.js`, `src/githubtemplatenodejs/config.js`, `src/githubtemplatenodejs/config_render.js`, `src/githubtemplatenodejs/management.js`, `src/githubtemplatenodejs/version_check.js`, `src/githubtemplatenodejs/colors.js` |
+| `PROC:main` | process | `PROC:launcher` (via `exec` replacement) or user interpreter (`node`, `npm install -g` bin, `npx`) | CLI application process: gated version check plus management-command and configuration-CLI dispatch | `src/githubtemplatenodejs/main.js` (npm `bin` entries `githubtemplatenodejs`
+  and `templatenodejs`); `src/templatenodejs/main.js` (launcher delegation) | `src/githubtemplatenodejs/main.js`, `src/githubtemplatenodejs/index.js`, `src/templatenodejs/main.js`, `src/templatenodejs/core.js`, `src/githubtemplatenodejs/core.js`, `src/githubtemplatenodejs/config.js`, `src/githubtemplatenodejs/config_render.js`, `src/githubtemplatenodejs/management.js`, `src/githubtemplatenodejs/version_check.js`, `src/githubtemplatenodejs/colors.js` |
 | `PROC:npm-tool-manage` | process | `PROC:main` | Transient child process executing the npm global install/uninstall argv variants (`--upgrade` npm/develop/forced variants and `--uninstall`; Linux only) | npm CLI argv from `UPGRADE_COMMAND` / `UPGRADE_FORCE_COMMAND` / `UPGRADE_DEVELOP_COMMAND` / `UPGRADE_DEVELOP_FORCE_COMMAND` / `UNINSTALL_COMMAND` | `src/githubtemplatenodejs/management.js` |
 | `PROC:build-tooling` | process | none (user shell) | Release-packaging wrapper validating the toolchain, restoring the clean startup state via `scripts/clean.sh`, pruning stale `dist/` tarballs, and delegating the package build | `scripts/build.sh` (bash top-level execution) | `scripts/build.sh` |
 | `PROC:clean-tooling` | process | `PROC:build-tooling` (delegated) or user shell | Repository cleanup wrapper removing execution-generated dependency trees, coverage outputs, build intermediates, and coverage data files while preserving `dist/` | `scripts/clean.sh` (bash top-level execution) | `scripts/clean.sh` |
@@ -46,9 +47,10 @@ no explicit threads detected.
 
 ### PROC:main
 
-- Entrypoint(s): npm `bin` executable `githubtemplatenodejs` loading
-  `src/githubtemplatenodejs/main.js` (top-level dispatcher invocation with
-  `process.exit` propagation); launcher delegation loading
+- Entrypoint(s): npm `bin` executables `githubtemplatenodejs` and
+  `templatenodejs` both loading `src/githubtemplatenodejs/main.js`
+  (top-level dispatcher invocation with `process.exit` propagation);
+  launcher delegation loading
   `src/templatenodejs/main.js`, which bridges through
   `src/templatenodejs/core.js` to the same dispatcher; package-root
   export `src/githubtemplatenodejs/index.js` exposing `main`.

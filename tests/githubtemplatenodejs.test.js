@@ -1751,8 +1751,10 @@ test("package json declares engines bin and complete files", () => {
      * @brief TST-030/TST-031 (DES-003/DES-057/DES-002): packaging contract.
      * @details expected_output = `engines.node` declares a minimum-pinning
      *          semver range, `bin` declares exactly the
-     *          `githubtemplatenodejs` entry point, and `files` carries the
-     *          distributable sources; expected_exception = none.
+     *          `githubtemplatenodejs` and `templatenodejs` entry points
+     *          both resolving to `src/githubtemplatenodejs/main.js`, and
+     *          `files` carries the distributable sources;
+     *          expected_exception = none.
      */
     const pkg = JSON.parse(
         fs.readFileSync(path.join(__dirname, "..", "package.json"), "utf8"),
@@ -1760,6 +1762,7 @@ test("package json declares engines bin and complete files", () => {
     assert.match(pkg.engines.node, /^>=\d+\.\d+\.\d+$/);
     assert.deepStrictEqual(pkg.bin, {
         "githubtemplatenodejs": "src/githubtemplatenodejs/main.js",
+        "templatenodejs": "src/githubtemplatenodejs/main.js",
     });
     assert.ok(pkg.files.includes("src/githubtemplatenodejs/"), pkg.files);
     assert.strictEqual(pkg.name, "githubtemplatenodejs");

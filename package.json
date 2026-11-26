@@ -22,7 +22,8 @@
   },
   "main": "src/githubtemplatenodejs/index.js",
   "bin": {
-    "githubtemplatenodejs": "src/githubtemplatenodejs/main.js"
+    "githubtemplatenodejs": "src/githubtemplatenodejs/main.js",
+    "templatenodejs": "src/githubtemplatenodejs/main.js"
   },
   "files": [
     "src/githubtemplatenodejs/",
