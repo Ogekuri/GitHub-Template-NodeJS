@@ -6,6 +6,10 @@
 
 # githubtemplatenodejs / templatenodejs (0.0.8)
 
+TODO: Once you have renamed the template using scripts/rename-me.sh, update and complete this README.md following the TODO instructions.
+
+TODO: Update the badges and descriptions in this section to reflect the final application's purpose and functionality, without changing the formatting or structure. Keep the menu sections as they are.
+
 <p align="center">
   <img src="https://img.shields.io/badge/node-24%2B-339933?style=flat-square&logo=node.js&logoColor=white" alt="NodeJS 24+">
   <img src="https://img.shields.io/badge/license-GPL--3.0-491?style=flat-square" alt="License: GPL-3.0">
@@ -40,6 +44,8 @@ and atomic persistence.
 
 # Feature Highlights
 
+TODO: Complete this section with a brief, easy-to-read paragraph. It must contain a bulleted list summarizing the main features of the application that provide the greatest value to the user.
+
 - **Published on npm**: install with `npm install -g githubtemplatenodejs`, or run on-the-fly with `npx githubtemplatenodejs`.
 - **Dual-source version report** (`--ver` / `--version`): installed, latest npm, and latest GitHub versions in aligned columns.
 - **Automatic new-version check** before every run, throttled by an idle-time cache so no redundant network calls are made.
@@ -50,6 +56,8 @@ and atomic persistence.
 - **Release automation**: a GitHub release for every version tag and OIDC Trusted Publishing to npm for `master` tags.
 
 # Quick Start
+
+TODO: Complete this section with a paragraph with the information needed for the immediate bring-up of the application to simplify first-time use. The described process must follow the flow: Installation -> Configuration -> Execution. Instructions must be clear and simple: OMIT all optional configuration details (which will go in the User's Guide).
 
 1. **Install** the tool from npm:
 
@@ -70,6 +78,8 @@ and atomic persistence.
 
 # Requirements
 
+TODO: Complete this section with a list of prerequisites necessary for installing, configuring, or running the application, including dependencies on third-party applications or external services.
+
 - **Node.js >= 24** (with the bundled `npm` CLI, used by `--upgrade` and `--uninstall`).
 - **`git`** — required only to install the development source with `--develop` / `--dev`.
 - **Network access** — outbound HTTPS to `registry.npmjs.org` (version check, upgrades) and `api.github.com` (latest-release query for the `--ver` report and `--develop` channel).
@@ -77,6 +87,8 @@ and atomic persistence.
 - **ANSI-capable terminal** — required for colored notifications.
 
 # User's Guide
+
+TODO: Complete this section with a description of detail in depth the installation, execution, and removal mechanisms of the application (Install/Uninstall). Include in this section all advanced configuration and customization aspects not described in the Quick Start.
 
 ## Install from npm (primary method)
 
@@ -261,6 +273,8 @@ file, or environment variable can alter them.
 
 # Documentation
 
+TODO: Complete this section with all information that cannot be placed in the other sections due to requirement incompatibilities (e.g., architectural notes, design, etc.). Information must be well-organized into logical sub-sections (H2, H3), in the most appropriate order and following documentation best practices.
+
 ## Automatic version check
 
 On every invocation the tool runs an online new-version check **before**
@@ -368,6 +382,8 @@ the release-workflow contract, and the packaging artifacts.
 
 # License
 
+TODO: Review all information regarding the application's usage license.
+
 This project is licensed under the **GNU General Public License v3.0 only**
 (SPDX identifier `GPL-3.0-only`), as declared in `package.json`.
 The full license text is available in the [`LICENSE`](LICENSE) file.
@@ -375,6 +391,8 @@ The full license text is available in the [`LICENSE`](LICENSE) file.
 Copyright (c) Francesco Rolando.
 
 # Acknowledgments
+
+TODO: Complete with acknowledgments to the authors of the projects/programs from which the application was derived and/or drew inspiration.
 
 - **[Node.js](https://nodejs.org)** and **[npm](https://www.npmjs.com)** — the runtime and packaging backbone of this template.
 - **[PI-useReq](https://github.com/Ogekuri/PI-useReq)** — the requirement-driven agentic workflow used to specify, implement, and document this repository.
