@@ -10,7 +10,7 @@
 > * **No Support or Feature Requests:** Please **do not** open issues, bug reports, or feature requests. They will not be addressed or accepted at this stage of development.
 > * **No Warranty:** This software is provided **"AS IS"**, without warranty of any kind, express or implied. You may use it strictly for **testing and evaluation purposes** at your own sole risk.
 
-# githubtemplatenodejs / templatenodejs (0.0.9)
+# githubtemplatenodejs / templatenodejs (0.0.10)
 
 TODO: Once you have renamed the template using scripts/rename-me.sh, update and complete this README.md following the TODO instructions.
 
@@ -142,7 +142,7 @@ The launcher resolves the repository root and delegates to `node src/templatenod
 The full help screen (printed by `--help` or by running the tool with no arguments):
 
 ```text
-Usage: githubtemplatenodejs [command] [options] (0.0.9)
+Usage: githubtemplatenodejs [command] [options] (0.0.10)
 
 Management Commands:
   --upgrade   - Reinstall githubtemplatenodejs on Linux; print manual command elsewhere.

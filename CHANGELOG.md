@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.0.9](https://github.com/Ogekuri/GitHub-Template-NodeJS/releases/tag/v0.0.9) - 2026-11-27
+## [0.0.10](https://github.com/Ogekuri/GitHub-Template-NodeJS/releases/tag/v0.0.10) - 2026-11-27
 ### ⛰️  Features
 - add TODO-chapter and no-line-wrap mandates, unwrap README [useReq] *(README)*
   Add DES-073..DES-083 and TST-036 to usereq/docs/REQUIREMENTS.md: every README.md level-1 chapter must open with its TODO completion block (placement and content as currently written), paragraph/list-item/blockquote text must not be hard-wrapped, and line breaks must stay confined to structural boundaries.
@@ -81,6 +81,7 @@
 
 ### 📚  Documentation
 - Update README.md file.
+- Update README.md file.
 
 ### ◀️  Revert
 - Roll back branch to 7ca258f7 (7ca258f7069b57ad71581ec811e02ccdea0cb41c).
@@ -88,6 +89,6 @@
 
 # History
 
-- \[0.0.9\]: https://github.com/Ogekuri/GitHub-Template-NodeJS/releases/tag/v0.0.9
+- \[0.0.10\]: https://github.com/Ogekuri/GitHub-Template-NodeJS/releases/tag/v0.0.10
 
-[0.0.9]: https://github.com/Ogekuri/GitHub-Template-NodeJS/releases/tag/v0.0.9
+[0.0.10]: https://github.com/Ogekuri/GitHub-Template-NodeJS/releases/tag/v0.0.10
