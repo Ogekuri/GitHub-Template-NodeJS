@@ -70,7 +70,7 @@ and atomic persistence.
 
 # Requirements
 
-- **Node.js >= 24**.
+- **Node.js >= 24** (with the bundled `npm` CLI, used by `--upgrade` and `--uninstall`).
 - **`git`** — required only to install the development source with `--develop` / `--dev`.
 - **Network access** — outbound HTTPS to `registry.npmjs.org` (version check, upgrades) and `api.github.com` (latest-release query for the `--ver` report and `--develop` channel).
 - **Linux** — required for the `--upgrade` and `--uninstall` side effects; on any other platform the tool prints a warning and the exact manual command.
@@ -106,10 +106,11 @@ A dedicated, non-primary distribution channel hosts intermediate and test
 releases on GitHub: `https://github.com/Ogekuri/GitHub-Template-NodeJS`.
 
 ```bash
-# Install from the GitHub repository
-npm install -g githubtemplatenodejs --force --from git+https://github.com/Ogekuri/GitHub-Template-NodeJS.git
+# Install / upgrade to the tip of the GitHub develop branch
+# (the exact command executed by --upgrade --develop)
+npm install -g git+https://github.com/Ogekuri/GitHub-Template-NodeJS.git#develop
 
-# Upgrade to the latest build of the GitHub develop branch
+# The same install performed through the tool itself:
 githubtemplatenodejs --upgrade --develop
 githubtemplatenodejs --upgrade --dev
 
@@ -274,6 +275,14 @@ argument parsing. The check is throttled by an idle-time cache:
   error note and backs off with an 86400-second idle-delay.
 - `--ver` and `--version` bypass the gate and always query both sources
   (npm registry JSON API and `https://api.github.com/repos/Ogekuri/GitHub-Template-NodeJS/releases/latest`).
+- The automatic check can be disabled entirely with the configuration switch
+  `version_check:disable-version-check` (see [Configuration](#configuration));
+  `--ver` and `--version` stay active regardless of the switch.
+- Cache writes are best effort: an unwritable or failing cache never aborts
+  the run, never prints anything, and never changes the command dispatch.
+- Version comparison is tolerant: every dot-separated component contributes
+  its leading integer digits (e.g. `9.9.9rc1` compares as `9.9.9`), so no
+  published version string is ever reported as a check failure.
 
 ## Repository tooling scripts
 
@@ -283,6 +292,7 @@ argument parsing. The check is throttled by an idle-time cache:
 | `scripts/build.sh` | Release packager: cleans the generated state, removes stale `dist/*.tgz`, builds `npm pack --pack-destination dist/`, and verifies the produced package tarball. |
 | `scripts/clean.sh` | Removes every repository-internal execution-generated artifact and restores the canonical startup state. |
 | `scripts/pre-release-check.sh` | Fail-fast release verification (syntax, node --check, npm test, out-of-tree build, artifact validation) with baseline-guarded cleanup. |
+| `scripts/rename-me.sh` | One-shot template instantiation: renames a copied template across file contents, filenames, and paths, then removes itself on success. |
 
 `scripts/clean.sh` removes `node_modules/` at any depth, the `.nyc_output/`,
 `coverage/`, and `build/` directories, and the `.coverage`/`.coverage.*`
@@ -312,11 +322,34 @@ No build step runs inside the workflow; runners are pinned to
 
 This repository doubles as the GitHub template
 [`Ogekuri/GitHub-Template-NodeJS`](https://github.com/Ogekuri/GitHub-Template-NodeJS)
-for new NodeJS applications. Template initialization extracts a skeleton
-bundle into the working directory and resolves seven keywords
-(`%AUTHOR%`, `%DESCRIPTION%`, `%PROGRAM%`, `%SHORTNAME%`, `%SRCDIR%`,
-`%OWNER%`, `%REPOSITORY%`) across the repository files, then renames the
-skeleton script and source directories to the substituted names. The full
+for new NodeJS applications. After copying the template,
+`scripts/rename-me.sh` instantiates the copy under the target project
+names, substituting every identity string across file contents, filenames,
+and paths:
+
+```bash
+./scripts/rename-me.sh \
+  --description "My new app" \
+  --program "mynewapp" \
+  --shortname "myapp" \
+  --repository "My-New-App" \
+  --publishname "mynewapp" \
+  [--author "Your Name"] \
+  [--owner "YourOrg"]
+```
+
+- Mandatory parameters: `--description`, `--program`, `--shortname`,
+  `--repository`, `--publishname`.
+- Optional parameters: `--author` and `--owner` (omission keeps the template
+  defaults `Francesco Rolando` and `Ogekuri`).
+- On full success the script verifies that no template string survives and
+  removes itself; on any failure it exits non-zero and stays on disk.
+- After the rename, refresh `package-lock.json` with `npm install` (it may
+  hold stale package names and hashes).
+
+Repository initialization from the skeleton bundle resolves the seven
+keywords (`%AUTHOR%`, `%DESCRIPTION%`, `%PROGRAM%`, `%SHORTNAME%`,
+`%SRCDIR%`, `%OWNER%`, `%REPOSITORY%`) across the repository files; the full
 procedure is specified in `usereq/docs/REQUIREMENTS.md`.
 
 ## Development and testing
