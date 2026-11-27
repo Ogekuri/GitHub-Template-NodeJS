@@ -203,6 +203,17 @@ Assumptions (non-normative; reversible interpretations of unspecified details):
 - **DES-070**: MUST maintain `.galias.conf` as the tracked galias project configuration declaring the `master`, `develop`, and `work` branches, `build_script` `scripts/build.sh`, and `pre_release_check` `scripts/pre-release-check.sh`.
 - **DES-071**: MUST keep `.galias.conf` `ver_rules` matching only the tracked version-bearing files `README.md`, `scripts/**/*.sh`, `package.json`, and `package-lock.json` through semver-capturing regular expressions.
 - **DES-072**: MUST keep every version occurrence captured by `.galias.conf` `ver_rules` equal to the `package.json` `version` field, the single canonical project version.
+- **DES-073**: MUST keep every README.md level-1 chapter beginning, immediately after its heading and one blank line, with a `TODO:` completion instruction preceding all other chapter content.
+- **DES-074**: MUST keep the title chapter opening with the two TODO lines directing post-rename README completion per the TODO instructions and badge/description updates preserving the menu sections.
+- **DES-075**: MUST keep the Feature Highlights TODO prescribing a brief paragraph plus a bulleted list summarizing the highest-value application features.
+- **DES-076**: MUST keep the Quick Start TODO prescribing a first-use paragraph following Installation -> Configuration -> Execution and omitting optional configuration details.
+- **DES-077**: MUST keep the Requirements chapter TODO prescribing the prerequisite list for installing, configuring, or running, including third-party applications and external services.
+- **DES-078**: MUST keep the User's Guide TODO prescribing in-depth Install/Uninstall documentation plus all advanced configuration and customization aspects omitted from Quick Start.
+- **DES-079**: MUST keep the Documentation chapter TODO prescribing information unplaceable elsewhere, organized into logical H2 and H3 sub-sections per documentation best practices.
+- **DES-080**: MUST keep the License chapter TODO prescribing a full review of the application usage-license information.
+- **DES-081**: MUST keep the Acknowledgments chapter TODO prescribing credit to the authors of projects the application derives from or drew inspiration from.
+- **DES-082**: MUST NOT hard-wrap README.md paragraph, list-item, or blockquote text across physical lines; each such text block MUST occupy exactly one physical line.
+- **DES-083**: MUST confine README.md line breaks to structural boundaries: headings, blank separators, list items, table rows, fenced code lines, blockquote markers, and discrete HTML elements.
 
 ### 3.2 Functions
 - **REQ-001**: MUST print the verbatim English help screen (template below) when invoked with `--help` or with no arguments.
@@ -313,3 +324,4 @@ Options:
 - **TST-033**: MUST verify `scripts/rename-me.sh` by copying the template working tree into `temp/`, executing the copied script with all seven parameters, and asserting exit status 0.
 - **TST-034**: MUST pass TST-033 iff no source string remains in any copied text-file content, filename, or path (binary archives excluded from content scanning).
 - **TST-035**: MUST verify DES-071 and DES-072 by parsing `.galias.conf`, applying every `ver_rules` pattern to the tracked files, and asserting each captured version equals the `package.json` version.
+- **TST-036**: MUST verify DES-073 through DES-083 by parsing README.md: pass iff every level-1 chapter opens with its TODO block matching the mandated placement and content and no paragraph, list-item, or blockquote text block spans multiple physical lines.

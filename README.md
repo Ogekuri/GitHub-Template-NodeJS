@@ -1,8 +1,5 @@
 > [!CAUTION]
-> **STRICTLY EXPERIMENTAL**: this project is a proof-of-concept template under
-> active development. Interfaces, commands, packaging metadata, and release
-> channels may change at any time without notice. Do not rely on it for
-> production workloads.
+> **STRICTLY EXPERIMENTAL**: this project is a proof-of-concept template under active development. Interfaces, commands, packaging metadata, and release channels may change at any time without notice. Do not rely on it for production workloads.
 
 # githubtemplatenodejs / templatenodejs (0.0.8)
 
@@ -18,15 +15,7 @@ TODO: Update the badges and descriptions in this section to reflect the final ap
   <img src="https://img.shields.io/badge/npm-CB3837?style=flat-square&logo=npm&logoColor=white" alt="npm">
 </p>
 <p align="center">
-<strong>GitHub template for NodeJS apps published on npm.</strong><br>
-A Node.js CLI application shipped as an npm-installable global tool with
-npm OIDC Trusted Publishing release automation. It provides management
-commands for upgrade, uninstall, and version reporting; an automatic
-new-version check throttled by an idle-time cache; self-upgrade from npm or
-from the GitHub <code>develop</code> branch via <code>--develop</code> / <code>--dev</code>; a dual-source version
-report (installed / npm / GitHub); and a JSON configuration CLI
-(<code>version_check:disable-version-check</code>) with schema validation
-and atomic persistence.
+<strong>GitHub template for NodeJS apps published on npm.</strong><br>A Node.js CLI application shipped as an npm-installable global tool with npm OIDC Trusted Publishing release automation. It provides management commands for upgrade, uninstall, and version reporting; an automatic new-version check throttled by an idle-time cache; self-upgrade from npm or from the GitHub <code>develop</code> branch via <code>--develop</code> / <code>--dev</code>; a dual-source version report (installed / npm / GitHub); and a JSON configuration CLI (<code>version_check:disable-version-check</code>) with schema validation and atomic persistence.
 </p>
 
 <p align="center">
@@ -65,9 +54,7 @@ TODO: Complete this section with a paragraph with the information needed for the
    npm install -g githubtemplatenodejs
    ```
 
-2. **Configure** — optional: the application works out of the box with
-   sensible defaults (bright green availability notes, bright red error
-   notes). Customization is described in the [User's Guide](#users-guide).
+2. **Configure** — optional: the application works out of the box with sensible defaults (bright green availability notes, bright red error notes). Customization is described in the [User's Guide](#users-guide).
 
 3. **Execute**:
 
@@ -114,8 +101,7 @@ npx githubtemplatenodejs --ver
 
 ## Install and upgrade from GitHub (non-primary development channel)
 
-A dedicated, non-primary distribution channel hosts intermediate and test
-releases on GitHub: `https://github.com/Ogekuri/GitHub-Template-NodeJS`.
+A dedicated, non-primary distribution channel hosts intermediate and test releases on GitHub: `https://github.com/Ogekuri/GitHub-Template-NodeJS`.
 
 ```bash
 # Install / upgrade to the tip of the GitHub develop branch
@@ -132,9 +118,7 @@ githubtemplatenodejs --upgrade --develop --force
 githubtemplatenodejs --upgrade --dev --force
 ```
 
-`--upgrade --develop` (alias `--dev`) always downloads the tip of the
-GitHub `develop` branch. The `--ver` report shows the release channel in
-the `Latest @ GitHub` row.
+`--upgrade --develop` (alias `--dev`) always downloads the tip of the GitHub `develop` branch. The `--ver` report shows the release channel in the `Latest @ GitHub` row.
 
 ## Run locally from the repository
 
@@ -142,13 +126,11 @@ the `Latest @ GitHub` row.
 ./scripts/templatenodejs.sh --help
 ```
 
-The launcher resolves the repository root and delegates to
-`node src/templatenodejs/main.js`.
+The launcher resolves the repository root and delegates to `node src/templatenodejs/main.js`.
 
 ## Command reference
 
-The full help screen (printed by `--help` or by running the tool with no
-arguments):
+The full help screen (printed by `--help` or by running the tool with no arguments):
 
 ```text
 Usage: githubtemplatenodejs [command] [options] (0.0.8)
@@ -176,8 +158,7 @@ Options:
 
 ### Version report (`--ver` / `--version`)
 
-Prints the three-row report with aligned version columns and always refreshes
-the source queries, bypassing the idle-time gate:
+Prints the three-row report with aligned version columns and always refreshes the source queries, bypassing the idle-time gate:
 
 ```text
 Current Installed : X1.Y1.Z1
@@ -185,9 +166,7 @@ Latest @ npm      : X2.Y2.Z2
 Latest @ GitHub   : X3.Y3.Z3
 ```
 
-A failed source prints `unknown (<reason>)` in place of the version, with a
-bright red note naming that source. The GitHub row strips the `v` prefix from
-the latest release tag.
+A failed source prints `unknown (<reason>)` in place of the version, with a bright red note naming that source. The GitHub row strips the `v` prefix from the latest release tag.
 
 ### `--upgrade` variants (Linux)
 
@@ -200,10 +179,7 @@ the latest release tag.
 | `--upgrade --develop --force` | `npm install -g git+https://github.com/Ogekuri/GitHub-Template-NodeJS.git#develop --force` |
 | `--upgrade --dev --force` | `npm install -g git+https://github.com/Ogekuri/GitHub-Template-NodeJS.git#develop --force` |
 
-On non-Linux operating systems nothing is executed: the tool prints a warning
-and the matching manual command from the table. `--develop` (alias `--dev`)
-and `--force` are accepted exclusively as `--upgrade` modifiers; any other
-combination falls back to the normal dispatch behavior.
+On non-Linux operating systems nothing is executed: the tool prints a warning and the matching manual command from the table. `--develop` (alias `--dev`) and `--force` are accepted exclusively as `--upgrade` modifiers; any other combination falls back to the normal dispatch behavior.
 
 ### `--uninstall` (Linux)
 
@@ -211,25 +187,17 @@ combination falls back to the normal dispatch behavior.
 githubtemplatenodejs --uninstall
 ```
 
-Executes `npm uninstall -g githubtemplatenodejs` on Linux; on any other
-platform it prints a warning and the manual command
-`npm uninstall -g githubtemplatenodejs`.
+Executes `npm uninstall -g githubtemplatenodejs` on Linux; on any other platform it prints a warning and the manual command `npm uninstall -g githubtemplatenodejs`.
 
 ## Configuration
 
 ### Configuration file
 
-The global configuration lives at
-`$HOME/.config/githubtemplatenodejs/config.json`. It is created with the
-schema defaults on the first configuration command and every update is
-validated against the schema and persisted atomically (the previous file is
-preserved if any step fails).
+The global configuration lives at `$HOME/.config/githubtemplatenodejs/config.json`. It is created with the schema defaults on the first configuration command and every update is validated against the schema and persisted atomically (the previous file is preserved if any step fails).
 
 ### Configuration commands
 
-Configuration paths are case-sensitive, colon-separated canonical tokens
-(`Section`, `Section:Parameter`); the schema defines the `version_check`
-section holding the `disable-version-check` Selection parameter.
+Configuration paths are case-sensitive, colon-separated canonical tokens (`Section`, `Section:Parameter`); the schema defines the `version_check` section holding the `disable-version-check` Selection parameter.
 
 | Command | Behavior |
 | --- | --- |
@@ -253,23 +221,16 @@ githubtemplatenodejs --set version_check:disable-version-check yes
 githubtemplatenodejs --unset version_check:disable-version-check
 ```
 
-On any configuration failure the tool exits with code `1`, prints a
-diagnostic on stderr, and emits nothing on stdout.
+On any configuration failure the tool exits with code `1`, prints a diagnostic on stderr, and emits nothing on stdout.
 
 ### Notification colors (hardcoded)
 
-Notification colors are not configurable. All colors live in one embedded
-internal JSON document (`COLOR_CONFIG_JSON`) inside
-`src/githubtemplatenodejs/colors.js`:
+Notification colors are not configurable. All colors live in one embedded internal JSON document (`COLOR_CONFIG_JSON`) inside `src/githubtemplatenodejs/colors.js`:
 
-- `notifications` assigns the new-version color `bright_green` (ANSI SGR 92)
-  and the error color `bright_red` (ANSI SGR 91).
-- `palette` maps every color token to its ANSI SGR prefix: `bright_green`
-  (92), `bright_red` (91), `bright_yellow` (93), `bright_blue` (94),
-  `bright_magenta` (95), `bright_cyan` (96), `bright_white` (97).
+- `notifications` assigns the new-version color `bright_green` (ANSI SGR 92) and the error color `bright_red` (ANSI SGR 91).
+- `palette` maps every color token to its ANSI SGR prefix: `bright_green` (92), `bright_red` (91), `bright_yellow` (93), `bright_blue` (94), `bright_magenta` (95), `bright_cyan` (96), `bright_white` (97).
 
-Both colors drive the automatic version-check notifications; no CLI option,
-file, or environment variable can alter them.
+Both colors drive the automatic version-check notifications; no CLI option, file, or environment variable can alter them.
 
 # Documentation
 
@@ -277,26 +238,15 @@ TODO: Complete this section with all information that cannot be placed in the ot
 
 ## Automatic version check
 
-On every invocation the tool runs an online new-version check **before**
-argument parsing. The check is throttled by an idle-time cache:
+On every invocation the tool runs an online new-version check **before** argument parsing. The check is throttled by an idle-time cache:
 
 - Cache file: `$HOME/.cache/githubtemplatenodejs/check_version_idle-time.json`.
-- The HTTPS request to `https://registry.npmjs.org/githubtemplatenodejs/latest` runs
-  only when the cache file is absent or the cached idle-time has elapsed
-  (2-second timeout).
-- A successful check refreshes the cache with a 3600-second idle-delay; a
-  failed check (HTTP 429, 503, timeout, network error) reports a bright red
-  error note and backs off with an 86400-second idle-delay.
-- `--ver` and `--version` bypass the gate and always query both sources
-  (npm registry JSON API and `https://api.github.com/repos/Ogekuri/GitHub-Template-NodeJS/releases/latest`).
-- The automatic check can be disabled entirely with the configuration switch
-  `version_check:disable-version-check` (see [Configuration](#configuration));
-  `--ver` and `--version` stay active regardless of the switch.
-- Cache writes are best effort: an unwritable or failing cache never aborts
-  the run, never prints anything, and never changes the command dispatch.
-- Version comparison is tolerant: every dot-separated component contributes
-  its leading integer digits (e.g. `9.9.9rc1` compares as `9.9.9`), so no
-  published version string is ever reported as a check failure.
+- The HTTPS request to `https://registry.npmjs.org/githubtemplatenodejs/latest` runs only when the cache file is absent or the cached idle-time has elapsed (2-second timeout).
+- A successful check refreshes the cache with a 3600-second idle-delay; a failed check (HTTP 429, 503, timeout, network error) reports a bright red error note and backs off with an 86400-second idle-delay.
+- `--ver` and `--version` bypass the gate and always query both sources (npm registry JSON API and `https://api.github.com/repos/Ogekuri/GitHub-Template-NodeJS/releases/latest`).
+- The automatic check can be disabled entirely with the configuration switch `version_check:disable-version-check` (see [Configuration](#configuration)); `--ver` and `--version` stay active regardless of the switch.
+- Cache writes are best effort: an unwritable or failing cache never aborts the run, never prints anything, and never changes the command dispatch.
+- Version comparison is tolerant: every dot-separated component contributes its leading integer digits (e.g. `9.9.9rc1` compares as `9.9.9`), so no published version string is ever reported as a check failure.
 
 ## Repository tooling scripts
 
@@ -308,12 +258,7 @@ argument parsing. The check is throttled by an idle-time cache:
 | `scripts/pre-release-check.sh` | Fail-fast release verification (syntax, node --check, npm test, out-of-tree build, artifact validation) with baseline-guarded cleanup. |
 | `scripts/rename-me.sh` | One-shot template instantiation: renames a copied template across file contents, filenames, and paths, then removes itself on success. |
 
-`scripts/clean.sh` removes `node_modules/` at any depth, the `.nyc_output/`,
-`coverage/`, and `build/` directories, and the `.coverage`/`.coverage.*`
-data files. It is idempotent (absent targets are a successful no-op), never
-touches tracked files, untracked user files, `$HOME` application data, or
-the versioned release artifacts in `dist/`, and never runs destructive git
-commands.
+`scripts/clean.sh` removes `node_modules/` at any depth, the `.nyc_output/`, `coverage/`, and `build/` directories, and the `.coverage`/`.coverage.*` data files. It is idempotent (absent targets are a successful no-op), never touches tracked files, untracked user files, `$HOME` application data, or the versioned release artifacts in `dist/`, and never runs destructive git commands.
 
 ```bash
 # Remove all execution-generated temporary artifacts
@@ -325,21 +270,11 @@ commands.
 
 ## Release automation
 
-For every canonical version tag `vX.Y.Z` the release workflow
-(`.github/workflows/release-npm.yml`) creates a GitHub release from the
-`dist/` package tarball present at the tagged commit and, when the tag
-belongs to `master`, publishes it to npm through OIDC Trusted Publishing.
-No build step runs inside the workflow; runners are pinned to
-`ubuntu-24.04`.
+For every canonical version tag `vX.Y.Z` the release workflow (`.github/workflows/release-npm.yml`) creates a GitHub release from the `dist/` package tarball present at the tagged commit and, when the tag belongs to `master`, publishes it to npm through OIDC Trusted Publishing. No build step runs inside the workflow; runners are pinned to `ubuntu-24.04`.
 
 ## Using this repository as a template
 
-This repository doubles as the GitHub template
-[`Ogekuri/GitHub-Template-NodeJS`](https://github.com/Ogekuri/GitHub-Template-NodeJS)
-for new NodeJS applications. After copying the template,
-`scripts/rename-me.sh` instantiates the copy under the target project
-names, substituting every identity string across file contents, filenames,
-and paths:
+This repository doubles as the GitHub template [`Ogekuri/GitHub-Template-NodeJS`](https://github.com/Ogekuri/GitHub-Template-NodeJS) for new NodeJS applications. After copying the template, `scripts/rename-me.sh` instantiates the copy under the target project names, substituting every identity string across file contents, filenames, and paths:
 
 ```bash
 ./scripts/rename-me.sh \
@@ -352,19 +287,12 @@ and paths:
   [--owner "YourOrg"]
 ```
 
-- Mandatory parameters: `--description`, `--program`, `--shortname`,
-  `--repository`, `--publishname`.
-- Optional parameters: `--author` and `--owner` (omission keeps the template
-  defaults `Francesco Rolando` and `Ogekuri`).
-- On full success the script verifies that no template string survives and
-  removes itself; on any failure it exits non-zero and stays on disk.
-- After the rename, refresh `package-lock.json` with `npm install` (it may
-  hold stale package names and hashes).
+- Mandatory parameters: `--description`, `--program`, `--shortname`, `--repository`, `--publishname`.
+- Optional parameters: `--author` and `--owner` (omission keeps the template defaults `Francesco Rolando` and `Ogekuri`).
+- On full success the script verifies that no template string survives and removes itself; on any failure it exits non-zero and stays on disk.
+- After the rename, refresh `package-lock.json` with `npm install` (it may hold stale package names and hashes).
 
-Repository initialization from the skeleton bundle resolves the seven
-keywords (`%AUTHOR%`, `%DESCRIPTION%`, `%PROGRAM%`, `%SHORTNAME%`,
-`%SRCDIR%`, `%OWNER%`, `%REPOSITORY%`) across the repository files; the full
-procedure is specified in `usereq/docs/REQUIREMENTS.md`.
+Repository initialization from the skeleton bundle resolves the seven keywords (`%AUTHOR%`, `%DESCRIPTION%`, `%PROGRAM%`, `%SHORTNAME%`, `%SRCDIR%`, `%OWNER%`, `%REPOSITORY%`) across the repository files; the full procedure is specified in `usereq/docs/REQUIREMENTS.md`.
 
 ## Development and testing
 
@@ -376,17 +304,13 @@ npm test
 ./scripts/pre-release-check.sh
 ```
 
-The test suite covers the help screen, version report, management-command
-argv variants, the gated version check and its cache, the configuration CLI,
-the release-workflow contract, and the packaging artifacts.
+The test suite covers the help screen, version report, management-command argv variants, the gated version check and its cache, the configuration CLI, the release-workflow contract, and the packaging artifacts.
 
 # License
 
 TODO: Review all information regarding the application's usage license.
 
-This project is licensed under the **GNU General Public License v3.0 only**
-(SPDX identifier `GPL-3.0-only`), as declared in `package.json`.
-The full license text is available in the [`LICENSE`](LICENSE) file.
+This project is licensed under the **GNU General Public License v3.0 only** (SPDX identifier `GPL-3.0-only`), as declared in `package.json`. The full license text is available in the [`LICENSE`](LICENSE) file.
 
 Copyright (c) Francesco Rolando.
 
