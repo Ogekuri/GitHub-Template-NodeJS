@@ -74,8 +74,9 @@ no explicit threads detected.
       [`src/githubtemplatenodejs/config.js`]
       - `config.loadDisplay(...)`: schema-shaped display-view loader with
         stale-schema tolerance [`src/githubtemplatenodejs/config.js`]
-        - `config.readPayload(...)`: read and parse the configuration
-          JSON document [`src/githubtemplatenodejs/config.js`]
+        - `config.readPayload(...)`: sparse reader treating an absent
+          file as the empty payload (REQ-052)
+          [`src/githubtemplatenodejs/config.js`]
     - `versionCheck.runVersionCheck(...)`: online check orchestration
       (skipped when the disable switch is enabled)
       [`src/githubtemplatenodejs/version_check.js`]
@@ -149,21 +150,21 @@ no explicit threads detected.
       [`src/githubtemplatenodejs/config.js`]
       - `config.usageExamples(...)`: schema-valid usage diagnostics
         [`src/githubtemplatenodejs/config.js`]
-    - `config.ensureBootstrapped(...)`: create missing storage with
-      defaults [`src/githubtemplatenodejs/config.js`]
-      - `config.atomicWriteJson(...)`: atomic persisted write
-        [`src/githubtemplatenodejs/config.js`]
-        - `config.defaultConfig(...)`: schema-default payload builder
-          [`src/githubtemplatenodejs/config.js`]
-    - `config.loadStrict(...)`: strict validated loader
+    - `config.ensureBootstrapped(...)`: directory-only bootstrap, never
+      pre-creating the configuration file (REQ-053)
       [`src/githubtemplatenodejs/config.js`]
-      - `config.readPayload(...)`
-      - `config.validateConfig(...)`: full-schema validation
+    - `config.loadStrict(...)`: sparse-validated effective loader merging
+      the persisted non-default subset onto the schema defaults
+      (REQ-052, REQ-055) [`src/githubtemplatenodejs/config.js`]
+      - `config.readPayload(...)`: sparse reader treating an absent file
+        as the empty payload (REQ-052)
+        [`src/githubtemplatenodejs/config.js`]
+      - `config.validateConfig(...)`: strict sparse validation (REQ-055)
         [`src/githubtemplatenodejs/config.js`]
         - `describeType(...)`: JSON type diagnostic naming
           [`src/githubtemplatenodejs/config.js`]
-        - `sortedDifference(...)`: sorted key-set mismatch fragments
-          [`src/githubtemplatenodejs/config.js`]
+      - `config.defaultConfig(...)`: schema-default payload builder for
+        the defaults merge [`src/githubtemplatenodejs/config.js`]
     - `config.resolveSegments(...)`: canonical path resolution
       [`src/githubtemplatenodejs/config.js`]
       - `config.section(...)`: public schema section lookup (DES-058)
@@ -181,7 +182,15 @@ no explicit threads detected.
       - `config.parseValue(...)`: Selection enum validation
         [`src/githubtemplatenodejs/config.js`]
       - `config.validateConfig(...)`
-    - `config.atomicWriteJson(...)`
+    - `config.persistConfig(...)`: sparse save gate persisting only
+      non-default parameters and deleting the emptied file (REQ-049,
+      REQ-050, REQ-051) [`src/githubtemplatenodejs/config.js`]
+      - `config.sparseConfig(...)`: non-default projection (REQ-049)
+        [`src/githubtemplatenodejs/config.js`]
+      - `config.atomicWriteJson(...)`: atomic persisted write
+        [`src/githubtemplatenodejs/config.js`]
+      - `config.removeConfigFile(...)`: empty-subset file deletion
+        (REQ-051) [`src/githubtemplatenodejs/config.js`]
   - `config.handleUnset(...)`: `--unset Path` restore-to-default + atomic
     persist [`src/githubtemplatenodejs/config.js`]
     - `config.operandValues(...)`
@@ -192,7 +201,15 @@ no explicit threads detected.
       - `config.resolveSegments(...)`
       - `config.defaultConfig(...)`
       - `config.validateConfig(...)`
-    - `config.atomicWriteJson(...)`
+    - `config.persistConfig(...)`: sparse save gate persisting only
+      non-default parameters and deleting the emptied file (REQ-049,
+      REQ-050, REQ-051) [`src/githubtemplatenodejs/config.js`]
+      - `config.sparseConfig(...)`: non-default projection (REQ-049)
+        [`src/githubtemplatenodejs/config.js`]
+      - `config.atomicWriteJson(...)`: atomic persisted write
+        [`src/githubtemplatenodejs/config.js`]
+      - `config.removeConfigFile(...)`: empty-subset file deletion
+        (REQ-051) [`src/githubtemplatenodejs/config.js`]
   - `config.handlePrintRaw(...)`: exact-bytes configuration passthrough
     [`src/githubtemplatenodejs/config.js`]
     - `config.operandValues(...)`
@@ -243,7 +260,8 @@ no explicit threads detected.
       - `emitNode(...)`
   - fallback `management.printHelp(...)`: unknown input
 - External Boundaries: `fs` cache/config reads and writes (including
-  atomic rename + fsync), `https` transport to the npm registry and the
+  atomic rename + fsync) plus configuration file removal, `https`
+  transport to the npm registry and the
   GitHub API, `child_process.spawnSync` npm child processes (stdio
   inherited), stdout/stderr writes, `process.exit` status propagation,
   `os.homedir()` fallback for `$HOME`.
@@ -380,7 +398,7 @@ no explicit threads detected.
 | 3 | `PROC:main` -> npm registry | HTTPS GET (`node:https`), 2-second timeout | `https://registry.npmjs.org/githubtemplatenodejs/latest` | JSON payload `{"name": ..., "version": "x.y.z", ...}` request: the version manifest of the latest published release with the latest version at the top-level `version` field; version string extracted | `src/githubtemplatenodejs/version_check.js` (`fetchJson`, `fetchLatestNpmVersion`, `NPM_JSON_ENDPOINT`) |
 | 4 | `PROC:main` -> GitHub API | HTTPS GET (`node:https`) with `Accept: application/vnd.github+json` and the GitHub-mandatory `User-Agent` header, 2-second timeout | `https://api.github.com/repos/Ogekuri/GitHub-Template-NodeJS/releases/latest` | JSON payload `{"tag_name": "vx.y.z"}` request; `v`-stripped version extracted | `src/githubtemplatenodejs/version_check.js` (`fetchJson`, `fetchLatestGithubVersion`, `GITHUB_RELEASES_ENDPOINT`) |
 | 5 | `PROC:main` -> filesystem cache | Read/write JSON file; missing parent directories created; best-effort write | `$HOME/.cache/githubtemplatenodejs/check_version_idle-time.json` | Four-field JSON object: `last_check_epoch`, `last_check_human`, `idle_time_epoch`, `idle_time_human` | `src/githubtemplatenodejs/version_check.js` (`cachePath`, `readCache`, `writeCache`) |
-| 6 | `PROC:main` -> filesystem configuration | Read/parse JSON; atomic persist via same-directory temp file, fsync, rename, directory fsync | `$HOME/.config/githubtemplatenodejs/config.json` | Schema-shaped JSON object: section token -> parameter token -> Selection token | `src/githubtemplatenodejs/config.js` (`configPath`, `readPayload`, `atomicWriteJson`) |
+| 6 | `PROC:main` -> filesystem configuration | Read/parse sparse JSON; atomic persist via same-directory temp file, fsync, rename, directory fsync; file deletion when the non-default subset is empty | `$HOME/.config/githubtemplatenodejs/config.json` | Sparse schema-shaped JSON object holding only parameter values differing from their schema defaults (section token -> parameter token -> Selection token); an absent file reads as schema defaults | `src/githubtemplatenodejs/config.js` (`configPath`, `readPayload`, `persistConfig`, `sparseConfig`, `atomicWriteJson`, `removeConfigFile`) |
 | 7 | `PROC:main` -> terminal | stdout/stderr writes | Console streams | Help text, three-row version report, ANSI-colored notifications, configuration JSON/trees, `Error:` diagnostics | `src/githubtemplatenodejs/management.js`, `src/githubtemplatenodejs/version_check.js`, `src/githubtemplatenodejs/config.js`, `src/githubtemplatenodejs/config_render.js` |
 | 8 | `PROC:build-tooling` -> `PROC:clean-tooling` | `bash` child invocation | OS process (bash) | Cleanup argv `bash <scripts-dir>/clean.sh`; exit status enforced | `scripts/build.sh` |
 | 9 | `PROC:build-tooling` -> `PROC:npm-pack-build` | `npm pack` child invocation | OS process (npm CLI) | Argv `npm pack --pack-destination <DIST_DIR>`; tarball written to `dist/` | `scripts/build.sh` |

@@ -73,14 +73,19 @@ O(1) constant-time lookups.
 
 ---
 
-# config.js | JavaScript | 965L | 39 symbols | 0 imports | 43 comments
+# config.js | JavaScript | 1041L | 41 symbols | 0 imports | 45 comments
 > Path: `src/githubtemplatenodejs/config.js`
 - @brief Configuration subsystem: canonical schema, strict validation,
 atomic JSON persistence, path resolution, and CLI handlers.
 - @details Single source of truth driving parsing, validation, defaults,
 path discovery, and configuration output (DES-010). State
-persists as JSON at `$HOME/.config/githubtemplatenodejs/
-config.json`. Version-check transport parameters (endpoint,
+persists as sparse JSON at `$HOME/.config/
+githubtemplatenodejs/config.json`: only parameter values
+differing from their schema defaults are stored (REQ-049),
+default-valued parameters are removed at each save (REQ-050),
+an emptied save deletes the file (REQ-051), and an absent
+file reads as the schema-default configuration (REQ-052).
+Version-check transport parameters (endpoint,
 timeout, idle-delays) stay hardcoded (CTN-008) and are not
 part of the schema; the automatic-check enable/disable switch
 is schema state (REQ-042). Handlers emit valid output on
@@ -89,41 +94,41 @@ and never mutate state on rejected operations (REQ-023).
 
 ## Definitions
 
-### mod `const fs = require("fs")` (L16-70)
+### mod `const fs = require("fs")` (L21-75)
 
-### mod `const os = require("os")` (L17-70)
+### mod `const os = require("os")` (L22-75)
 - @brief Global configuration directory segments relative to `$HOME`.
 - @details Mirrors the version-check cache isolation policy (CTN-008).
 
-### mod `const path = require("path")` (L18-70)
+### mod `const path = require("path")` (L23-75)
 - @brief Global configuration directory segments relative to `$HOME`.
 - @details Mirrors the version-check cache isolation policy (CTN-008).
-- const `const CONFIG_DIR_SEGMENTS = [".config", "githubtemplatenodejs"]` (L24)
+- const `const CONFIG_DIR_SEGMENTS = [".config", "githubtemplatenodejs"]` (L29)
   - @brief Global configuration directory segments relative to `$HOME`.
   - @details Mirrors the version-check cache isolation policy (CTN-008).
-- const `const CONFIG_FILE_NAME = "config.json"` (L31)
+- const `const CONFIG_FILE_NAME = "config.json"` (L36)
   - @brief Global configuration JSON file name.
   - @details Fixed file name under the configuration directory (DES-007
 convention); no project-local configuration layer exists.
-- const `const VERSION_CHECK_SECTION_TOKEN = "version_check"` (L38)
+- const `const VERSION_CHECK_SECTION_TOKEN = "version_check"` (L43)
   - @brief Canonical token of the version-check schema section.
   - @details First-level CLI path token (REQ-022); case-sensitive.
   - @satisfies REQ-042
-- const `const DISABLE_VERSION_CHECK_PARAM_TOKEN = "disable-version-check"` (L45)
+- const `const DISABLE_VERSION_CHECK_PARAM_TOKEN = "disable-version-check"` (L50)
   - @brief Canonical token of the automatic-check suppression parameter.
   - @details Second-level CLI path token (REQ-022); case-sensitive.
   - @satisfies REQ-042
-- const `const DISABLE_VERSION_CHECK_ENUM = ["no", "yes"]` (L51)
+- const `const DISABLE_VERSION_CHECK_ENUM = ["no", "yes"]` (L56)
   - @brief Ordered allowed values of the suppression parameter (Selection).
   - @satisfies REQ-042
-- const `const DISABLE_VERSION_CHECK_ENABLED_VALUE = "yes"` (L57)
+- const `const DISABLE_VERSION_CHECK_ENABLED_VALUE = "yes"` (L62)
   - @brief Enum token suppressing the automatic online check (REQ-043).
   - @satisfies REQ-043
-- const `const DISABLE_VERSION_CHECK_DEFAULT_VALUE = "no"` (L63)
+- const `const DISABLE_VERSION_CHECK_DEFAULT_VALUE = "no"` (L68)
   - @brief Schema default keeping the automatic online check enabled.
   - @satisfies REQ-042
 
-### fn `function paramSpec(token, typeLabel, description, defaultValue, enumValues)` (L81-96)
+### fn `function paramSpec(token, typeLabel, description, defaultValue, enumValues)` (L86-101)
 - @brief Immutable schema descriptor of one configuration parameter.
 - @details `token` equals the CLI path token byte for byte (REQ-022);
 drives parsing, validation, defaults, display, and
@@ -139,7 +144,7 @@ headings.
 parameters.
 - @satisfies DES-010
 
-### fn `function sectionSpec(token, description, params)` (L110-131)
+### fn `function sectionSpec(token, description, params)` (L115-136)
 - @brief Immutable schema descriptor of one fixed-schema section.
 - @details Fixed-schema dictionary branch; whole-section `--set`
 replaces the branch with a schema-compatible JSON object and
@@ -151,7 +156,7 @@ Instances are frozen after creation.
 @property {Array} params Ordered parameter descriptors of the section.
 - @satisfies DES-010
 
-- const `const SCHEMA = Object.freeze([` (L143)
+- const `const SCHEMA = Object.freeze([` (L148)
 - @brief Canonical configuration schema (DES-010).
 - @details Insertion order defines canonical display order. The schema
 defines the `version_check` section holding the
@@ -160,12 +165,12 @@ transport parameters stay hardcoded constants (CTN-008) and
 notification colors stay hardcoded in the embedded internal
 color JSON of `colors.js` (REQ-040).
 - @satisfies DES-010 REQ-042 CTN-008
-- const `const SECTIONS_BY_TOKEN = new Map(` (L167)
+- const `const SECTIONS_BY_TOKEN = new Map(` (L172)
 - @brief Schema token to SectionSpec map for O(1) path resolution.
 - @details Module-private index; cross-module consumers MUST use the
 public `section()` API (DES-058).
 - @satisfies DES-058
-### fn `function section(token)` (L181-185)
+### fn `function section(token)` (L186-190)
 - @brief Look up one schema section descriptor by canonical token.
 - @details Public schema access point (DES-058): cross-module consumers
 (renderers, documentation builders) resolve sections through
@@ -175,7 +180,7 @@ the CLI path token byte for byte (REQ-022). Complexity: O(1).
 - @return {Object|null} Matching descriptor; null if absent.
 - @satisfies DES-010 DES-058
 
-### class `class ConfigError extends Error` : Error (L194-203)
+### class `class ConfigError extends Error` : Error (L199-208)
 - @brief Configuration error carrying a user-facing diagnostic.
 - @brief Construct the error with its user-facing diagnostic.
 - @details Raised for invalid paths, values, JSON, validation failures,
@@ -184,7 +189,7 @@ message on stderr and exit 1 (REQ-023).
 - @param {string} message Complete diagnostic message.
 - @satisfies REQ-023
 
-### fn `function configPath()` (L214-221)
+### fn `function configPath()` (L219-226)
 - @brief Resolve the absolute global configuration file path.
 - @details Prefers the `HOME` environment variable (CTN-008 consistency
 with the version-check cache); falls back to `os.homedir()`
@@ -193,7 +198,7 @@ Complexity: O(1).
 - @return {string} Absolute path of the global configuration JSON file.
 - @satisfies CTN-008
 
-### fn `function defaultConfig()` (L231-241)
+### fn `function defaultConfig()` (L236-246)
 - @brief Build the schema-default configuration payload.
 - @details Section token to parameter token to default value, in
 canonical schema order. Complexity: O(sections * params).
@@ -201,35 +206,32 @@ canonical schema order. Complexity: O(sections * params).
 configuration payload.
 - @satisfies REQ-018 DES-010
 
-### fn `function validateConfig(payload)` (L256-312)
-- @brief Validate a complete configuration against the schema.
-- @details Strict validation: JSON object root, exact section key set,
-exact parameter key set per section, and Selection values
-restricted to the parameter enum. Throws without mutation;
-callers reject the operation on error. Complexity:
-O(sections * params).
-- @param {Object} payload Parsed JSON configuration payload.
+### fn `function validateConfig(payload)` (L266-308)
+- @brief Validate a sparse configuration payload against the schema.
+- @details Strict sparse validation (REQ-055): JSON object root, every
+present section key known, every present parameter key known
+inside its section, and every present Selection value
+restricted to the parameter enum. Sections and parameters
+absent from the payload resolve to their schema defaults
+(REQ-052) and are never rejected, so any schema-valid subset
+is accepted. Throws without mutation; callers reject the
+operation on error. Complexity: O(payload keys).
+- @param {Object} payload Parsed JSON configuration payload (sparse or
+complete).
 - @return {undefined}
-- @throws {ConfigError} On root-type, section-key, parameter-key, or
-enum-membership mismatch; message names the offending path.
-- @satisfies DES-010 REQ-017 REQ-023
+- @throws {ConfigError} On root-type, unknown-section, branch-type,
+unknown-parameter, or enum-membership mismatch; message names
+the offending path.
+- @satisfies REQ-055 REQ-052 REQ-017 REQ-023 DES-010
 
-### fn `function describeType(value)` (L321-329)
+### fn `function describeType(value)` (L317-325)
 - @brief Describe the JSON type name of one value for diagnostics.
 - @details Maps null, arrays, and plain objects to the vocabulary used by
 validation messages. Complexity: O(1).
 - @param {*} value Any JSON value.
 - @return {string} Human-readable JSON type name.
 
-### fn `function sortedDifference(left, right)` (L339-342)
-- @brief Compute the sorted symmetric difference fragment of two arrays.
-- @details Returns the sorted elements of `left` absent from `right`.
-Complexity: O(n log n).
-- @param {string[]} left Candidate tokens.
-- @param {string[]} right Expected tokens.
-- @return {string[]} Sorted tokens present in left but not in right.
-
-### fn `function atomicWriteJson(filePath, payload)` (L361-417)
+### fn `function atomicWriteJson(filePath, payload)` (L344-400)
 - @brief Persist a validated payload atomically (DES-014).
 - @details Writes a same-directory temporary file, flushes and fsyncs
 it, preserves the prior target file mode, atomically replaces
@@ -246,60 +248,103 @@ sequence fails; the original file stays untouched.
 - @post On success the file holds exactly the serialized payload with
 two-space indentation and a trailing newline.
 
-### fn `function ensureBootstrapped()` (L430-443)
-- @brief Create missing directories and initialize missing defaults.
-- @details Applicable configuration commands call this before
-executing. Never overwrites an existing file, valid or not;
-strict loaders surface invalid files as errors.
-Complexity: O(1) filesystem-bound.
+### fn `function sparseConfig(payload)` (L414-433)
+- @brief Project a configuration payload onto its non-default subset.
+- @details Sparse projection (REQ-049): walks the canonical schema order
+and keeps only parameters whose value differs from the schema
+default; sections without non-default parameters and keys
+outside the schema are dropped. The input payload is never
+mutated. Complexity: O(sections * params).
+- @param {Object} payload Configuration payload (sparse or complete).
+- @return {Object<string, Object<string, string>>} Sparse payload holding
+only non-default parameter values in canonical schema order.
+- @satisfies REQ-049
+
+### fn `function removeConfigFile(filePath)` (L445-451)
+- @brief Delete the global configuration file when present.
+- @details Implements the empty-sparse-save rule (REQ-051): an absent
+file is a successful no-op; any other filesystem failure
+raises without partial state. Complexity: O(1).
+- @param {string} filePath Configuration file path to remove.
 - @return {undefined}
-- @throws {ConfigError} When directories cannot be created or the
-default file cannot be written.
-- @satisfies REQ-016 REQ-017 REQ-018 REQ-019 REQ-020 REQ-021
+- @throws {ConfigError} When the removal fails.
+- @satisfies REQ-051
 
-### fn `function readPayload()` (L456-472)
-- @brief Read and parse the persisted configuration JSON document.
-- @details Resolves `configPath`, requires an existing file, reads it as
-UTF-8 text, and parses the JSON document; every failure
-raises without returning a partial result (REQ-023).
+### fn `function persistConfig(payload)` (L469-476)
+- @brief Persist the non-default subset of a validated payload.
+- @details Single configuration save gate (REQ-049, REQ-050, REQ-051,
+DES-014): projects the payload onto its sparse non-default
+subset via `sparseConfig`; a non-empty subset is written
+atomically via `atomicWriteJson`, an empty subset deletes the
+configuration file via `removeConfigFile`. Default-valued
+parameters never reach the persisted document (REQ-050).
+Complexity: O(sections * params + payload size).
+- @param {Object} payload Schema-validated configuration payload.
+- @return {undefined}
+- @throws {ConfigError} When the write or the removal fails.
+- @satisfies REQ-049 REQ-050 REQ-051 DES-014
+- @post The configuration file holds exactly the non-default parameters,
+or is absent when every parameter equals its schema default.
+
+### fn `function ensureBootstrapped()` (L490-497)
+- @brief Create the missing configuration directory hierarchy.
+- @details Applicable configuration commands call this before executing.
+Directory-only bootstrap (REQ-053): the configuration file is
+never pre-created; an absent file reads as the schema-default
+configuration (REQ-052) and is created by the first
+non-default save (REQ-049). Complexity: O(1) filesystem-bound.
+- @return {undefined}
+- @throws {ConfigError} When directories cannot be created.
+- @satisfies REQ-053 REQ-052 REQ-016 REQ-017 REQ-018 REQ-019 REQ-020
+REQ-021
+
+### fn `function readPayload()` (L510-526)
+- @brief Read and parse the persisted sparse configuration JSON document.
+- @details Resolves `configPath` and reads it as UTF-8 text; an absent
+file yields the empty sparse payload `{}` (REQ-052), so every
+reader sees the schema-default configuration; every other
+failure raises without returning a partial result (REQ-023).
 Complexity: O(file size).
-- @return {Object} Parsed JSON payload.
-- @throws {ConfigError} When the file is absent, unreadable, or
-malformed JSON.
-- @satisfies REQ-023
+- @return {Object} Parsed JSON payload; `{}` when the file is absent.
+- @throws {ConfigError} When the file is unreadable or malformed JSON.
+- @satisfies REQ-052 REQ-023
 
-### fn `function loadStrict()` (L486-490)
-- @brief Load and strictly validate the global configuration.
-- @details Reads the file selected by `configPath`, parses JSON, and
-applies `validateConfig`; every failure raises instead of
-partially succeeding (REQ-022, REQ-023). Complexity:
-O(file size + schema).
-- @return {Object<string, Object<string, string>>} Validated
-configuration payload.
-- @throws {ConfigError} When the file is absent, unreadable, malformed
-JSON, or schema-invalid.
-- @satisfies REQ-022 REQ-023
+### fn `function loadStrict()` (L543-551)
+- @brief Load the strictly validated effective global configuration.
+- @details Reads the sparse persisted document, applies the strict
+sparse `validateConfig` (REQ-055), and merges the result onto
+the schema defaults (REQ-052): absent sections and parameters
+resolve to their schema default, so the returned payload is
+always schema-complete. Every invalid sparse document raises
+instead of partially succeeding (REQ-022, REQ-023).
+Complexity: O(file size + schema).
+- @return {Object<string, Object<string, string>>} Effective validated
+configuration payload (schema-complete).
+- @throws {ConfigError} When the file is unreadable, malformed JSON, or
+schema-invalid.
+- @satisfies REQ-052 REQ-055 REQ-022 REQ-023
 
-### fn `function loadDisplay()` (L511-535)
+### fn `function loadDisplay()` (L573-597)
 - @brief Load the schema-shaped display view of the configuration.
 - @details Read-only loader of the schema-driven `--print` and `--info`
 renderers (DES-010, DES-012): requires a JSON-object root,
-then projects the payload onto the schema. Content persisted
-by an older schema version never blocks rendering (TST-008):
-unknown sections and parameters are dropped, and schema
-branches or parameters missing from the file fall back to
-their schema defaults, so the result is always safe for the
-renderers' direct payload indexing. Unreadable, malformed,
+then projects the sparse payload onto the schema (REQ-052).
+Content persisted by an older schema version never blocks
+rendering (TST-008): unknown sections and parameters are
+dropped, an absent file yields the empty sparse payload, and
+schema branches or parameters missing from the file fall back
+to their schema defaults, so the result is always safe for
+the renderers' direct payload indexing. Unreadable, malformed,
 and non-object files remain hard failures (REQ-023).
 Complexity: O(file size + schema).
 - @return {Object<string, Object<string, string>>} Schema-shaped
 payload: section token to parameter token to current value
 (schema default when absent from the file).
-- @throws {ConfigError} When the file is absent, unreadable, malformed
-JSON, or its root is not a JSON object.
-- @satisfies DES-010 TST-008 REQ-019 REQ-023
+- @throws {ConfigError} When the file is unreadable, malformed JSON, or
+its root is not a JSON object.
+- @satisfies DES-010 TST-008 REQ-052 REQ-019 REQ-023
 
-### fn `function versionCheckDisabled()` (L551-567)
+### fn `function versionCheckDisabled()` (L613-629)
 - @brief Report whether the automatic version check is disabled.
 - @details Tolerant runtime reader (REQ-044): loads the schema-shaped
 display view and compares the `disable-version-check` value
@@ -313,7 +358,7 @@ the suppression (REQ-042, TST-008). Complexity: O(file size).
 token; false otherwise.
 - @satisfies REQ-042 REQ-043 REQ-044
 
-### fn `function resolveSegments(rawPath)` (L584-624)
+### fn `function resolveSegments(rawPath)` (L646-686)
 - @brief Resolve a canonical configuration path against the schema.
 - @details Case-sensitive colon-separated tokens (REQ-022). This schema
 defines exactly two depths: `Section` and
@@ -328,7 +373,7 @@ or parameter tokens, and excessive depth; messages list valid
 alternatives.
 - @satisfies REQ-022
 
-### fn `function getValue(payload, segments)` (L636-642)
+### fn `function getValue(payload, segments)` (L698-704)
 - @brief Extract the JSON-serializable value at a resolved path.
 - @details Depth 1 yields a shallow copy of the section object; depth 2
 yields the parameter string. Complexity: O(branch size).
@@ -338,7 +383,7 @@ yields the parameter string. Complexity: O(branch size).
 string for depth 2.
 - @satisfies REQ-016
 
-### fn `function parseValue(spec, raw)` (L656-664)
+### fn `function parseValue(spec, raw)` (L718-726)
 - @brief Parse a raw CLI operand into the schema type of `spec`.
 - @details Selection parameters accept exactly one enum token; JSON
 quoting is not stripped, so quoted input is rejected
@@ -350,7 +395,7 @@ quoting is not stripped, so quoted input is rejected
 enumerates valid values.
 - @satisfies REQ-017
 
-### fn `function setValue(payload, rawPath, raw)` (L682-709)
+### fn `function setValue(payload, rawPath, raw)` (L744-771)
 - @brief Apply a validated `--set` mutation and return the result.
 - @details Depth 1 replaces the whole section with a parsed
 schema-compatible JSON object; depth 2 parses the operand
@@ -366,7 +411,7 @@ configuration.
 validation failure; no persisted mutation occurs.
 - @satisfies REQ-017
 
-### fn `function unsetValue(payload, rawPath)` (L724-738)
+### fn `function unsetValue(payload, rawPath)` (L786-800)
 - @brief Apply a `--unset` restore-to-default mutation.
 - @details Depth 1 restores all section parameter defaults; depth 2
 restores one parameter default (REQ-018). The resulting
@@ -379,7 +424,7 @@ configuration.
 - @throws {ConfigError} On path resolution or validation failure.
 - @satisfies REQ-018
 
-### fn `function operandValues(args, flag, minimum, maximum)` (L755-768)
+### fn `function operandValues(args, flag, minimum, maximum)` (L817-830)
 - @brief Extract the operand tokens following one CLI flag.
 - @details Operands are every token after the first flag occurrence;
 the count must lie within `[minimum, maximum]`, otherwise a
@@ -394,7 +439,7 @@ raised (REQ-022). Complexity: O(args).
 message embeds schema-valid usage examples.
 - @satisfies REQ-022
 
-### fn `function usageExamples(flag)` (L781-814)
+### fn `function usageExamples(flag)` (L843-876)
 - @brief Build schema-valid usage examples for one config flag.
 - @details Examples derive from the first schema section so they always
 carry complete canonical paths and real schema-valid values
@@ -405,7 +450,7 @@ Complexity: O(1).
 - @return {string} Semicolon-separated example command tails.
 - @satisfies REQ-022
 
-### fn `function fail(error)` (L825-828)
+### fn `function fail(error)` (L887-890)
 - @brief Report a configuration failure and yield the exit status.
 - @details Diagnostics go to stderr with an `Error:` prefix; stdout
 stays untouched so no partial success output exists
@@ -414,87 +459,97 @@ stays untouched so no partial success output exists
 - @return {number} Always 1.
 - @satisfies REQ-023
 
-### fn `function handleGet(args)` (L840-855)
+### fn `function handleGet(args)` (L904-919)
 - @brief Execute `--get Path` (REQ-016).
-- @details Bootstraps storage, loads strictly, resolves the canonical
-path, and prints the resolved value as one valid JSON
-document on stdout without decoration (JSON-quoted strings,
-objects for sections). Complexity: O(file size).
+- @details Bootstraps storage, loads the effective validated
+configuration (an absent file reads as the schema defaults,
+REQ-052), resolves the canonical path, and prints the
+resolved value as one valid JSON document on stdout without
+decoration (JSON-quoted strings, objects for sections).
+Complexity: O(file size).
 - @param {string[]} args CLI argument tokens excluding program name.
 - @return {number} 0 on success; 1 with a stderr diagnostic on failure.
-- @satisfies REQ-016 REQ-023
+- @satisfies REQ-016 REQ-052 REQ-023
 
-### fn `function handleSet(args)` (L867-881)
+### fn `function handleSet(args)` (L933-947)
 - @brief Execute `--set Path Value` (REQ-017, DES-014).
 - @details Parses Value into the schema type, validates the entire
-resulting configuration, and persists atomically; success is
-silent and any rejection leaves the stored file untouched.
-Complexity: O(file size).
+resulting configuration, and persists its non-default subset
+(REQ-049, REQ-050); a save whose subset is empty deletes the
+configuration file (REQ-051). Success is silent and any
+rejection leaves the stored file untouched. Complexity:
+O(file size).
 - @param {string[]} args CLI argument tokens excluding program name.
 - @return {number} 0 on success; 1 with a stderr diagnostic on failure.
-- @satisfies REQ-017 REQ-023 DES-014
+- @satisfies REQ-017 REQ-049 REQ-050 REQ-051 REQ-023 DES-014
 
-### fn `function handleUnset(args)` (L892-906)
+### fn `function handleUnset(args)` (L960-974)
 - @brief Execute `--unset Path` (REQ-018, DES-014).
-- @details Restores the targeted parameter or section to schema
-defaults and persists atomically; success is silent.
-Complexity: O(file size).
+- @details Restores the targeted parameter or section to schema defaults
+and persists atomically; restored default-valued parameters
+are removed from the file and the emptied file is deleted
+(REQ-050, REQ-051); success is silent. Complexity:
+O(file size).
 - @param {string[]} args CLI argument tokens excluding program name.
 - @return {number} 0 on success; 1 with a stderr diagnostic on failure.
-- @satisfies REQ-018 REQ-023 DES-014
+- @satisfies REQ-018 REQ-049 REQ-050 REQ-051 REQ-023 DES-014
 
-### fn `function handlePrintRaw(args)` (L918-932)
+### fn `function handlePrintRaw(args)` (L988-1006)
 - @brief Execute `--print-raw` (REQ-021).
 - @details Emits the exact bytes of the global configuration JSON file
 without parsing, reformatting, headings, or trailing text; no
-tree formatting is ever applied (on-disk debugging view).
+tree formatting is ever applied (on-disk debugging view). The
+file is absent in the all-default state (REQ-052, REQ-053);
+absence fails with exit 1 and a stderr diagnostic (REQ-054).
 Complexity: O(file size).
 - @param {string[]} args CLI argument tokens excluding program name.
 - @return {number} 0 on success; 1 with a stderr diagnostic on failure.
-- @satisfies REQ-021 REQ-023
+- @satisfies REQ-021 REQ-054 REQ-023
 
 ## Symbol Index
 |Symbol|Kind|Vis|Lines|Sig|
 |---|---|---|---|---|
-|`fs`|mod||16-70||
-|`os`|mod||17-70||
-|`path`|mod||18-70||
-|`path.CONFIG_DIR_SEGMENTS`|const||24||
-|`path.CONFIG_FILE_NAME`|const||31||
-|`path.VERSION_CHECK_SECTION_TOKEN`|const||38||
-|`path.DISABLE_VERSION_CHECK_PARAM_TOKEN`|const||45||
-|`path.DISABLE_VERSION_CHECK_ENUM`|const||51||
-|`path.DISABLE_VERSION_CHECK_ENABLED_VALUE`|const||57||
-|`path.DISABLE_VERSION_CHECK_DEFAULT_VALUE`|const||63||
-|`paramSpec`|fn||81-96|function paramSpec(token, typeLabel, description, default...|
-|`sectionSpec`|fn||110-131|function sectionSpec(token, description, params)|
-|`SCHEMA`|const||143||
-|`SECTIONS_BY_TOKEN`|const||167||
-|`section`|fn||181-185|function section(token)|
-|`ConfigError`|class||194-203|class ConfigError extends Error|
-|`configPath`|fn||214-221|function configPath()|
-|`defaultConfig`|fn||231-241|function defaultConfig()|
-|`validateConfig`|fn||256-312|function validateConfig(payload)|
-|`describeType`|fn||321-329|function describeType(value)|
-|`sortedDifference`|fn||339-342|function sortedDifference(left, right)|
-|`atomicWriteJson`|fn||361-417|function atomicWriteJson(filePath, payload)|
-|`ensureBootstrapped`|fn||430-443|function ensureBootstrapped()|
-|`readPayload`|fn||456-472|function readPayload()|
-|`loadStrict`|fn||486-490|function loadStrict()|
-|`loadDisplay`|fn||511-535|function loadDisplay()|
-|`versionCheckDisabled`|fn||551-567|function versionCheckDisabled()|
-|`resolveSegments`|fn||584-624|function resolveSegments(rawPath)|
-|`getValue`|fn||636-642|function getValue(payload, segments)|
-|`parseValue`|fn||656-664|function parseValue(spec, raw)|
-|`setValue`|fn||682-709|function setValue(payload, rawPath, raw)|
-|`unsetValue`|fn||724-738|function unsetValue(payload, rawPath)|
-|`operandValues`|fn||755-768|function operandValues(args, flag, minimum, maximum)|
-|`usageExamples`|fn||781-814|function usageExamples(flag)|
-|`fail`|fn||825-828|function fail(error)|
-|`handleGet`|fn||840-855|function handleGet(args)|
-|`handleSet`|fn||867-881|function handleSet(args)|
-|`handleUnset`|fn||892-906|function handleUnset(args)|
-|`handlePrintRaw`|fn||918-932|function handlePrintRaw(args)|
+|`fs`|mod||21-75||
+|`os`|mod||22-75||
+|`path`|mod||23-75||
+|`path.CONFIG_DIR_SEGMENTS`|const||29||
+|`path.CONFIG_FILE_NAME`|const||36||
+|`path.VERSION_CHECK_SECTION_TOKEN`|const||43||
+|`path.DISABLE_VERSION_CHECK_PARAM_TOKEN`|const||50||
+|`path.DISABLE_VERSION_CHECK_ENUM`|const||56||
+|`path.DISABLE_VERSION_CHECK_ENABLED_VALUE`|const||62||
+|`path.DISABLE_VERSION_CHECK_DEFAULT_VALUE`|const||68||
+|`paramSpec`|fn||86-101|function paramSpec(token, typeLabel, description, default...|
+|`sectionSpec`|fn||115-136|function sectionSpec(token, description, params)|
+|`SCHEMA`|const||148||
+|`SECTIONS_BY_TOKEN`|const||172||
+|`section`|fn||186-190|function section(token)|
+|`ConfigError`|class||199-208|class ConfigError extends Error|
+|`configPath`|fn||219-226|function configPath()|
+|`defaultConfig`|fn||236-246|function defaultConfig()|
+|`validateConfig`|fn||266-308|function validateConfig(payload)|
+|`describeType`|fn||317-325|function describeType(value)|
+|`atomicWriteJson`|fn||344-400|function atomicWriteJson(filePath, payload)|
+|`sparseConfig`|fn||414-433|function sparseConfig(payload)|
+|`removeConfigFile`|fn||445-451|function removeConfigFile(filePath)|
+|`persistConfig`|fn||469-476|function persistConfig(payload)|
+|`ensureBootstrapped`|fn||490-497|function ensureBootstrapped()|
+|`readPayload`|fn||510-526|function readPayload()|
+|`loadStrict`|fn||543-551|function loadStrict()|
+|`loadDisplay`|fn||573-597|function loadDisplay()|
+|`versionCheckDisabled`|fn||613-629|function versionCheckDisabled()|
+|`resolveSegments`|fn||646-686|function resolveSegments(rawPath)|
+|`getValue`|fn||698-704|function getValue(payload, segments)|
+|`parseValue`|fn||718-726|function parseValue(spec, raw)|
+|`setValue`|fn||744-771|function setValue(payload, rawPath, raw)|
+|`unsetValue`|fn||786-800|function unsetValue(payload, rawPath)|
+|`operandValues`|fn||817-830|function operandValues(args, flag, minimum, maximum)|
+|`usageExamples`|fn||843-876|function usageExamples(flag)|
+|`fail`|fn||887-890|function fail(error)|
+|`handleGet`|fn||904-919|function handleGet(args)|
+|`handleSet`|fn||933-947|function handleSet(args)|
+|`handleUnset`|fn||960-974|function handleUnset(args)|
+|`handlePrintRaw`|fn||988-1006|function handlePrintRaw(args)|
 
 
 ---

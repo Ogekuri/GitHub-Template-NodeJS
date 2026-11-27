@@ -8,7 +8,8 @@
  *          - UUTs and levels: L0 = colors.notificationColors,
  *            management.isLinux, management.managementEntry,
  *            version_check.parseVersion, version_check.humanTimestamp,
- *            version_check.formatReportRow, config.section; L1 =
+ *            version_check.formatReportRow, config.section,
+ *            config.sparseConfig; L1 =
  *            management.buildHelpText, management.printHelp,
  *            management.cmdUpgrade, management.cmdUninstall,
  *            version_check.readCache, version_check.writeCache,
@@ -16,8 +17,8 @@
  *            version_check.fetchLatestNpmVersion,
  *            version_check.fetchLatestGithubVersion,
  *            version_check.runVersionCheck,
- *            version_check.runVersionReport, config.render handlers; L2
- *            = core.main.
+ *            version_check.runVersionReport, config.persistConfig,
+ *            config.render handlers; L2 = core.main.
  *          - External dependencies isolated: network (transport seam
  *            `fetchJson` replaced with `t.mock.method`), filesystem
  *            (`$HOME` redirected into a per-test temp directory by the
@@ -1190,18 +1191,21 @@ test("set rejects invalid enum values without mutation", async (t) => {
     /**
      * @brief TST-010 boundary (REQ-017/REQ-023) L1: typed value parsing.
      * @details expected_output = invalid enum values exit 1 with a stderr
-     *          diagnostic, empty stdout, and the stored file untouched;
-     *          expected_exception = none.
+     *          diagnostic, empty stdout, and the sparse seeded file
+     *          (REQ-049) byte-untouched; expected_exception = none.
      */
-    config.ensureBootstrapped();
-    const before = fs.readFileSync(config.configPath(), "utf8");
+    const configurationFile = seedConfig(
+        isolatedHome,
+        '{"version_check": {"disable-version-check": "yes"}}\n',
+    );
+    const before = fs.readFileSync(configurationFile, "utf8");
     const captured = await captureIO(
         () => config.handleSet(["--set", "version_check:disable-version-check", "maybe"]),
     );
     assert.strictEqual(captured.result, 1);
     assert.strictEqual(captured.out(), "");
     assert.ok(captured.err().startsWith("Error: "), captured.err());
-    assert.strictEqual(fs.readFileSync(config.configPath(), "utf8"), before);
+    assert.strictEqual(fs.readFileSync(configurationFile, "utf8"), before);
     const quoted = await captureIO(
         () => config.handleSet(["--set", "version_check:disable-version-check", "\"yes\""]),
     );
@@ -1212,14 +1216,110 @@ test("print raw emits exact file bytes", async (t) => {
     /**
      * @brief REQ-021 L1: `--print-raw` byte passthrough.
      * @details expected_output = stdout equals the exact configuration
-     *          file bytes with no reformatting or added text;
+     *          file bytes with no reformatting or added text; the sparse
+     *          seeded file (REQ-049) is the passthrough source;
      *          expected_exception = none.
      */
-    config.ensureBootstrapped();
-    const raw = fs.readFileSync(config.configPath());
+    const rawText = '{"version_check": {"disable-version-check": "yes"}}\n';
+    const configurationFile = seedConfig(isolatedHome, rawText);
+    const raw = fs.readFileSync(configurationFile);
     const captured = await captureIO(() => config.handlePrintRaw(["--print-raw"]));
     assert.strictEqual(captured.result, 0);
     assert.strictEqual(Buffer.from(captured.out(), "utf8").equals(raw), true);
+});
+
+test("sparse projection keeps only non default parameters", (t) => {
+    /**
+     * @brief TST-037 (REQ-049) L0: sparse projection contract.
+     * @details expected_output = sparseConfig drops every default-valued
+     *          parameter and empty sections, keeps canonical schema order
+     *          for non-default values, ignores keys outside the schema,
+     *          and never mutates the input; expected_exception = none.
+     */
+    assert.deepStrictEqual(config.sparseConfig(config.defaultConfig()), {});
+    const payload = {
+        "version_check": { "disable-version-check": "yes" },
+        "unknown_section": { "unknown": "x" },
+    };
+    assert.deepStrictEqual(
+        config.sparseConfig(payload),
+        { "version_check": { "disable-version-check": "yes" } },
+    );
+    assert.strictEqual(payload.version_check["disable-version-check"], "yes");
+});
+
+test("sparse persistence stores only non default parameters", async (t) => {
+    /**
+     * @brief TST-037 (REQ-049..REQ-055) L1: sparse persistence lifecycle.
+     * @details expected_output = bootstrap creates no configuration file,
+     *          an absent file reads as schema defaults, absent-file
+     *          `--print-raw` exits 1 with a stderr diagnostic, a
+     *          non-default `--set` persists exactly that parameter, a
+     *          default-valued `--set` and a `--unset` remove the parameter
+     *          and delete the emptied file, and an unknown sparse
+     *          parameter is rejected by strict readers while staying
+     *          tolerated by the display loader; expected_exception = none.
+     */
+    config.ensureBootstrapped();
+    assert.strictEqual(fs.existsSync(config.configPath()), false);
+    assert.strictEqual(config.versionCheckDisabled(), false);
+    const absentGet = await captureIO(
+        () => config.handleGet(["--get", "version_check:disable-version-check"]),
+    );
+    assert.strictEqual(absentGet.result, 0);
+    assert.strictEqual(absentGet.out(), "\"no\"\n");
+    const absentRaw = await captureIO(
+        () => config.handlePrintRaw(["--print-raw"]),
+    );
+    assert.strictEqual(absentRaw.result, 1);
+    assert.strictEqual(absentRaw.out(), "");
+    assert.ok(absentRaw.err().startsWith("Error: "), absentRaw.err());
+
+    const setCaptured = await captureIO(
+        () => config.handleSet(["--set", "version_check:disable-version-check", "yes"]),
+    );
+    assert.strictEqual(setCaptured.result, 0);
+    assert.strictEqual(setCaptured.out(), "");
+    assert.deepStrictEqual(
+        JSON.parse(fs.readFileSync(config.configPath(), "utf8")),
+        { "version_check": { "disable-version-check": "yes" } },
+    );
+
+    const setDefault = await captureIO(
+        () => config.handleSet(["--set", "version_check:disable-version-check", "no"]),
+    );
+    assert.strictEqual(setDefault.result, 0);
+    assert.strictEqual(fs.existsSync(config.configPath()), false);
+
+    await captureIO(
+        () => config.handleSet(["--set", "version_check:disable-version-check", "yes"]),
+    );
+    const unsetCaptured = await captureIO(
+        () => config.handleUnset(["--unset", "version_check:disable-version-check"]),
+    );
+    assert.strictEqual(unsetCaptured.result, 0);
+    assert.strictEqual(fs.existsSync(config.configPath()), false);
+    const restoredGet = await captureIO(
+        () => config.handleGet(["--get", "version_check:disable-version-check"]),
+    );
+    assert.strictEqual(restoredGet.result, 0);
+    assert.strictEqual(restoredGet.out(), "\"no\"\n");
+
+    seedConfig(isolatedHome, '{"version_check": {"nosuch": "x"}}\n');
+    const unknownGet = await captureIO(
+        () => config.handleGet(["--get", "version_check:disable-version-check"]),
+    );
+    assert.strictEqual(unknownGet.result, 1);
+    assert.strictEqual(unknownGet.out(), "");
+    assert.ok(unknownGet.err().startsWith("Error: "), unknownGet.err());
+    const toleratedPrint = await captureIO(
+        () => configRender.handlePrint(["--print"]),
+    );
+    assert.strictEqual(toleratedPrint.result, 0);
+    assert.ok(
+        toleratedPrint.out().includes("disable-version-check = \"no\" (default)"),
+        toleratedPrint.out(),
+    );
 });
 
 test("get prints json documents for section and parameter depths", async (t) => {

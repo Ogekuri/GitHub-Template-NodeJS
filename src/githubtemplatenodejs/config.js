@@ -5,8 +5,13 @@
  *        atomic JSON persistence, path resolution, and CLI handlers.
  * @details Single source of truth driving parsing, validation, defaults,
  *          path discovery, and configuration output (DES-010). State
- *          persists as JSON at `$HOME/.config/githubtemplatenodejs/
- *          config.json`. Version-check transport parameters (endpoint,
+ *          persists as sparse JSON at `$HOME/.config/
+ *          githubtemplatenodejs/config.json`: only parameter values
+ *          differing from their schema defaults are stored (REQ-049),
+ *          default-valued parameters are removed at each save (REQ-050),
+ *          an emptied save deletes the file (REQ-051), and an absent
+ *          file reads as the schema-default configuration (REQ-052).
+ *          Version-check transport parameters (endpoint,
  *          timeout, idle-delays) stay hardcoded (CTN-008) and are not
  *          part of the schema; the automatic-check enable/disable switch
  *          is schema state (REQ-042). Handlers emit valid output on
@@ -241,17 +246,22 @@ function defaultConfig() {
 }
 
 /**
- * @brief Validate a complete configuration against the schema.
- * @details Strict validation: JSON object root, exact section key set,
- *          exact parameter key set per section, and Selection values
- *          restricted to the parameter enum. Throws without mutation;
- *          callers reject the operation on error. Complexity:
- *          O(sections * params).
- * @param {Object} payload Parsed JSON configuration payload.
+ * @brief Validate a sparse configuration payload against the schema.
+ * @details Strict sparse validation (REQ-055): JSON object root, every
+ *          present section key known, every present parameter key known
+ *          inside its section, and every present Selection value
+ *          restricted to the parameter enum. Sections and parameters
+ *          absent from the payload resolve to their schema defaults
+ *          (REQ-052) and are never rejected, so any schema-valid subset
+ *          is accepted. Throws without mutation; callers reject the
+ *          operation on error. Complexity: O(payload keys).
+ * @param {Object} payload Parsed JSON configuration payload (sparse or
+ *        complete).
  * @return {undefined}
- * @throws {ConfigError} On root-type, section-key, parameter-key, or
- *         enum-membership mismatch; message names the offending path.
- * @satisfies DES-010 REQ-017 REQ-023
+ * @throws {ConfigError} On root-type, unknown-section, branch-type,
+ *         unknown-parameter, or enum-membership mismatch; message names
+ *         the offending path.
+ * @satisfies REQ-055 REQ-052 REQ-017 REQ-023 DES-010
  */
 function validateConfig(payload) {
     if (payload === null || typeof payload !== "object" || Array.isArray(payload)) {
@@ -260,50 +270,36 @@ function validateConfig(payload) {
             + describeType(payload),
         );
     }
-    const expectedSections = [...SECTIONS_BY_TOKEN.keys()];
-    const actualSections = Object.keys(payload);
-    const unknownSections = sortedDifference(actualSections, expectedSections);
-    const missingSections = sortedDifference(expectedSections, actualSections);
-    if (unknownSections.length > 0 || missingSections.length > 0) {
-        throw new ConfigError(
-            "configuration sections mismatch"
-            + (unknownSections.length > 0
-                ? "; unknown sections: " + JSON.stringify(unknownSections)
-                : "")
-            + (missingSections.length > 0
-                ? "; missing sections: " + JSON.stringify(missingSections)
-                : ""),
-        );
-    }
-    for (const schemaSection of SCHEMA) {
-        const branch = payload[schemaSection.token];
+    for (const sectionToken of Object.keys(payload)) {
+        const schemaSection = SECTIONS_BY_TOKEN.get(sectionToken);
+        if (schemaSection === undefined) {
+            throw new ConfigError(
+                "unknown configuration section " + JSON.stringify(sectionToken)
+                + "; valid sections: "
+                + [...SECTIONS_BY_TOKEN.keys()].join(", "),
+            );
+        }
+        const branch = payload[sectionToken];
         if (branch === null || typeof branch !== "object" || Array.isArray(branch)) {
             throw new ConfigError(
-                "section " + schemaSection.token + " must be a JSON object; got "
+                "section " + sectionToken + " must be a JSON object; got "
                 + describeType(branch),
             );
         }
-        const expectedParams = schemaSection.params.map((schemaParam) => schemaParam.token);
-        const actualParams = Object.keys(branch);
-        const unknownParams = sortedDifference(actualParams, expectedParams);
-        const missingParams = sortedDifference(expectedParams, actualParams);
-        if (unknownParams.length > 0 || missingParams.length > 0) {
-            throw new ConfigError(
-                "section " + schemaSection.token + " parameters mismatch"
-                + (unknownParams.length > 0
-                    ? "; unknown: " + JSON.stringify(unknownParams)
-                    : "")
-                + (missingParams.length > 0
-                    ? "; missing: " + JSON.stringify(missingParams)
-                    : ""),
-            );
-        }
-        for (const schemaParam of schemaSection.params) {
-            const value = branch[schemaParam.token];
+        for (const paramToken of Object.keys(branch)) {
+            const schemaParam = schemaSection.param(paramToken);
+            if (schemaParam === null) {
+                throw new ConfigError(
+                    "unknown parameter " + JSON.stringify(paramToken)
+                    + " in section " + sectionToken + "; valid parameters: "
+                    + schemaSection.params.map((schemaParam) => schemaParam.token).join(", "),
+                );
+            }
+            const value = branch[paramToken];
             if (typeof value !== "string" || !schemaParam.enum.includes(value)) {
                 throw new ConfigError(
-                    "invalid value for " + schemaSection.token + ":"
-                    + schemaParam.token + ": " + JSON.stringify(value)
+                    "invalid value for " + sectionToken + ":"
+                    + paramToken + ": " + JSON.stringify(value)
                     + "; allowed values: " + schemaParam.enum.join(", "),
                 );
             }
@@ -326,19 +322,6 @@ function describeType(value) {
         return "array";
     }
     return typeof value;
-}
-
-/**
- * @brief Compute the sorted symmetric difference fragment of two arrays.
- * @details Returns the sorted elements of `left` absent from `right`.
- *          Complexity: O(n log n).
- * @param {string[]} left Candidate tokens.
- * @param {string[]} right Expected tokens.
- * @return {string[]} Sorted tokens present in left but not in right.
- */
-function sortedDifference(left, right) {
-    const rightSet = new Set(right);
-    return left.filter((token) => !rightSet.has(token)).sort();
 }
 
 /**
@@ -417,51 +400,122 @@ function atomicWriteJson(filePath, payload) {
 }
 
 /**
- * @brief Create missing directories and initialize missing defaults.
- * @details Applicable configuration commands call this before
- *          executing. Never overwrites an existing file, valid or not;
- *          strict loaders surface invalid files as errors.
- *          Complexity: O(1) filesystem-bound.
+ * @brief Project a configuration payload onto its non-default subset.
+ * @details Sparse projection (REQ-049): walks the canonical schema order
+ *          and keeps only parameters whose value differs from the schema
+ *          default; sections without non-default parameters and keys
+ *          outside the schema are dropped. The input payload is never
+ *          mutated. Complexity: O(sections * params).
+ * @param {Object} payload Configuration payload (sparse or complete).
+ * @return {Object<string, Object<string, string>>} Sparse payload holding
+ *         only non-default parameter values in canonical schema order.
+ * @satisfies REQ-049
+ */
+function sparseConfig(payload) {
+    const sparse = {};
+    for (const schemaSection of SCHEMA) {
+        const branch = payload[schemaSection.token];
+        if (branch === null || typeof branch !== "object" || Array.isArray(branch)) {
+            continue;
+        }
+        const sparseBranch = {};
+        for (const schemaParam of schemaSection.params) {
+            const value = branch[schemaParam.token];
+            if (value !== undefined && value !== schemaParam.default) {
+                sparseBranch[schemaParam.token] = value;
+            }
+        }
+        if (Object.keys(sparseBranch).length > 0) {
+            sparse[schemaSection.token] = sparseBranch;
+        }
+    }
+    return sparse;
+}
+
+/**
+ * @brief Delete the global configuration file when present.
+ * @details Implements the empty-sparse-save rule (REQ-051): an absent
+ *          file is a successful no-op; any other filesystem failure
+ *          raises without partial state. Complexity: O(1).
+ * @param {string} filePath Configuration file path to remove.
  * @return {undefined}
- * @throws {ConfigError} When directories cannot be created or the
- *         default file cannot be written.
- * @satisfies REQ-016 REQ-017 REQ-018 REQ-019 REQ-020 REQ-021
+ * @throws {ConfigError} When the removal fails.
+ * @satisfies REQ-051
+ */
+function removeConfigFile(filePath) {
+    try {
+        fs.rmSync(filePath, { force: true });
+    } catch (error) {
+        throw new ConfigError("cannot remove configuration file: " + error.message);
+    }
+}
+
+/**
+ * @brief Persist the non-default subset of a validated payload.
+ * @details Single configuration save gate (REQ-049, REQ-050, REQ-051,
+ *          DES-014): projects the payload onto its sparse non-default
+ *          subset via `sparseConfig`; a non-empty subset is written
+ *          atomically via `atomicWriteJson`, an empty subset deletes the
+ *          configuration file via `removeConfigFile`. Default-valued
+ *          parameters never reach the persisted document (REQ-050).
+ *          Complexity: O(sections * params + payload size).
+ * @param {Object} payload Schema-validated configuration payload.
+ * @return {undefined}
+ * @throws {ConfigError} When the write or the removal fails.
+ * @post The configuration file holds exactly the non-default parameters,
+ *       or is absent when every parameter equals its schema default.
+ * @satisfies REQ-049 REQ-050 REQ-051 DES-014
+ */
+function persistConfig(payload) {
+    const sparse = sparseConfig(payload);
+    if (Object.keys(sparse).length === 0) {
+        removeConfigFile(configPath());
+        return;
+    }
+    atomicWriteJson(configPath(), sparse);
+}
+
+/**
+ * @brief Create the missing configuration directory hierarchy.
+ * @details Applicable configuration commands call this before executing.
+ *          Directory-only bootstrap (REQ-053): the configuration file is
+ *          never pre-created; an absent file reads as the schema-default
+ *          configuration (REQ-052) and is created by the first
+ *          non-default save (REQ-049). Complexity: O(1) filesystem-bound.
+ * @return {undefined}
+ * @throws {ConfigError} When directories cannot be created.
+ * @satisfies REQ-053 REQ-052 REQ-016 REQ-017 REQ-018 REQ-019 REQ-020
+ * REQ-021
  */
 function ensureBootstrapped() {
     const filePath = configPath();
     try {
         fs.mkdirSync(path.dirname(filePath), { recursive: true });
-        if (!fs.existsSync(filePath)) {
-            atomicWriteJson(filePath, defaultConfig());
-        }
     } catch (error) {
-        if (error instanceof ConfigError) {
-            throw error;
-        }
         throw new ConfigError("cannot initialize configuration: " + error.message);
     }
 }
 
 /**
- * @brief Read and parse the persisted configuration JSON document.
- * @details Resolves `configPath`, requires an existing file, reads it as
- *          UTF-8 text, and parses the JSON document; every failure
- *          raises without returning a partial result (REQ-023).
+ * @brief Read and parse the persisted sparse configuration JSON document.
+ * @details Resolves `configPath` and reads it as UTF-8 text; an absent
+ *          file yields the empty sparse payload `{}` (REQ-052), so every
+ *          reader sees the schema-default configuration; every other
+ *          failure raises without returning a partial result (REQ-023).
  *          Complexity: O(file size).
- * @return {Object} Parsed JSON payload.
- * @throws {ConfigError} When the file is absent, unreadable, or
- *         malformed JSON.
- * @satisfies REQ-023
+ * @return {Object} Parsed JSON payload; `{}` when the file is absent.
+ * @throws {ConfigError} When the file is unreadable or malformed JSON.
+ * @satisfies REQ-052 REQ-023
  */
 function readPayload() {
     const filePath = configPath();
-    if (!fs.existsSync(filePath)) {
-        throw new ConfigError("configuration file not found: " + filePath);
-    }
     let text;
     try {
         text = fs.readFileSync(filePath, "utf8");
     } catch (error) {
+        if (error !== null && typeof error === "object" && error.code === "ENOENT") {
+            return {};
+        }
         throw new ConfigError("cannot read configuration file: " + error.message);
     }
     try {
@@ -472,41 +526,49 @@ function readPayload() {
 }
 
 /**
- * @brief Load and strictly validate the global configuration.
- * @details Reads the file selected by `configPath`, parses JSON, and
- *          applies `validateConfig`; every failure raises instead of
- *          partially succeeding (REQ-022, REQ-023). Complexity:
- *          O(file size + schema).
- * @return {Object<string, Object<string, string>>} Validated
- *         configuration payload.
- * @throws {ConfigError} When the file is absent, unreadable, malformed
- *         JSON, or schema-invalid.
- * @satisfies REQ-022 REQ-023
+ * @brief Load the strictly validated effective global configuration.
+ * @details Reads the sparse persisted document, applies the strict
+ *          sparse `validateConfig` (REQ-055), and merges the result onto
+ *          the schema defaults (REQ-052): absent sections and parameters
+ *          resolve to their schema default, so the returned payload is
+ *          always schema-complete. Every invalid sparse document raises
+ *          instead of partially succeeding (REQ-022, REQ-023).
+ *          Complexity: O(file size + schema).
+ * @return {Object<string, Object<string, string>>} Effective validated
+ *         configuration payload (schema-complete).
+ * @throws {ConfigError} When the file is unreadable, malformed JSON, or
+ *         schema-invalid.
+ * @satisfies REQ-052 REQ-055 REQ-022 REQ-023
  */
 function loadStrict() {
     const payload = readPayload();
     validateConfig(payload);
-    return payload;
+    const merged = defaultConfig();
+    for (const sectionToken of Object.keys(payload)) {
+        Object.assign(merged[sectionToken], payload[sectionToken]);
+    }
+    return merged;
 }
 
 /**
  * @brief Load the schema-shaped display view of the configuration.
  * @details Read-only loader of the schema-driven `--print` and `--info`
  *          renderers (DES-010, DES-012): requires a JSON-object root,
- *          then projects the payload onto the schema. Content persisted
- *          by an older schema version never blocks rendering (TST-008):
- *          unknown sections and parameters are dropped, and schema
- *          branches or parameters missing from the file fall back to
- *          their schema defaults, so the result is always safe for the
- *          renderers' direct payload indexing. Unreadable, malformed,
+ *          then projects the sparse payload onto the schema (REQ-052).
+ *          Content persisted by an older schema version never blocks
+ *          rendering (TST-008): unknown sections and parameters are
+ *          dropped, an absent file yields the empty sparse payload, and
+ *          schema branches or parameters missing from the file fall back
+ *          to their schema defaults, so the result is always safe for
+ *          the renderers' direct payload indexing. Unreadable, malformed,
  *          and non-object files remain hard failures (REQ-023).
  *          Complexity: O(file size + schema).
  * @return {Object<string, Object<string, string>>} Schema-shaped
  *         payload: section token to parameter token to current value
  *         (schema default when absent from the file).
- * @throws {ConfigError} When the file is absent, unreadable, malformed
- *         JSON, or its root is not a JSON object.
- * @satisfies DES-010 TST-008 REQ-019 REQ-023
+ * @throws {ConfigError} When the file is unreadable, malformed JSON, or
+ *         its root is not a JSON object.
+ * @satisfies DES-010 TST-008 REQ-052 REQ-019 REQ-023
  */
 function loadDisplay() {
     const payload = readPayload();
@@ -829,13 +891,15 @@ function fail(error) {
 
 /**
  * @brief Execute `--get Path` (REQ-016).
- * @details Bootstraps storage, loads strictly, resolves the canonical
- *          path, and prints the resolved value as one valid JSON
- *          document on stdout without decoration (JSON-quoted strings,
- *          objects for sections). Complexity: O(file size).
+ * @details Bootstraps storage, loads the effective validated
+ *          configuration (an absent file reads as the schema defaults,
+ *          REQ-052), resolves the canonical path, and prints the
+ *          resolved value as one valid JSON document on stdout without
+ *          decoration (JSON-quoted strings, objects for sections).
+ *          Complexity: O(file size).
  * @param {string[]} args CLI argument tokens excluding program name.
  * @return {number} 0 on success; 1 with a stderr diagnostic on failure.
- * @satisfies REQ-016 REQ-023
+ * @satisfies REQ-016 REQ-052 REQ-023
  */
 function handleGet(args) {
     let value;
@@ -857,12 +921,14 @@ function handleGet(args) {
 /**
  * @brief Execute `--set Path Value` (REQ-017, DES-014).
  * @details Parses Value into the schema type, validates the entire
- *          resulting configuration, and persists atomically; success is
- *          silent and any rejection leaves the stored file untouched.
- *          Complexity: O(file size).
+ *          resulting configuration, and persists its non-default subset
+ *          (REQ-049, REQ-050); a save whose subset is empty deletes the
+ *          configuration file (REQ-051). Success is silent and any
+ *          rejection leaves the stored file untouched. Complexity:
+ *          O(file size).
  * @param {string[]} args CLI argument tokens excluding program name.
  * @return {number} 0 on success; 1 with a stderr diagnostic on failure.
- * @satisfies REQ-017 REQ-023 DES-014
+ * @satisfies REQ-017 REQ-049 REQ-050 REQ-051 REQ-023 DES-014
  */
 function handleSet(args) {
     try {
@@ -870,7 +936,7 @@ function handleSet(args) {
         ensureBootstrapped();
         const payload = loadStrict();
         const updated = setValue(payload, operands[0], operands[1]);
-        atomicWriteJson(configPath(), updated);
+        persistConfig(updated);
     } catch (error) {
         if (error instanceof ConfigError) {
             return fail(error);
@@ -882,12 +948,14 @@ function handleSet(args) {
 
 /**
  * @brief Execute `--unset Path` (REQ-018, DES-014).
- * @details Restores the targeted parameter or section to schema
- *          defaults and persists atomically; success is silent.
- *          Complexity: O(file size).
+ * @details Restores the targeted parameter or section to schema defaults
+ *          and persists atomically; restored default-valued parameters
+ *          are removed from the file and the emptied file is deleted
+ *          (REQ-050, REQ-051); success is silent. Complexity:
+ *          O(file size).
  * @param {string[]} args CLI argument tokens excluding program name.
  * @return {number} 0 on success; 1 with a stderr diagnostic on failure.
- * @satisfies REQ-018 REQ-023 DES-014
+ * @satisfies REQ-018 REQ-049 REQ-050 REQ-051 REQ-023 DES-014
  */
 function handleUnset(args) {
     try {
@@ -895,7 +963,7 @@ function handleUnset(args) {
         ensureBootstrapped();
         const payload = loadStrict();
         const updated = unsetValue(payload, operands[0]);
-        atomicWriteJson(configPath(), updated);
+        persistConfig(updated);
     } catch (error) {
         if (error instanceof ConfigError) {
             return fail(error);
@@ -909,18 +977,24 @@ function handleUnset(args) {
  * @brief Execute `--print-raw` (REQ-021).
  * @details Emits the exact bytes of the global configuration JSON file
  *          without parsing, reformatting, headings, or trailing text; no
- *          tree formatting is ever applied (on-disk debugging view).
+ *          tree formatting is ever applied (on-disk debugging view). The
+ *          file is absent in the all-default state (REQ-052, REQ-053);
+ *          absence fails with exit 1 and a stderr diagnostic (REQ-054).
  *          Complexity: O(file size).
  * @param {string[]} args CLI argument tokens excluding program name.
  * @return {number} 0 on success; 1 with a stderr diagnostic on failure.
- * @satisfies REQ-021 REQ-023
+ * @satisfies REQ-021 REQ-054 REQ-023
  */
 function handlePrintRaw(args) {
     let data;
     try {
         operandValues(args, "--print-raw", 0, 0);
         ensureBootstrapped();
-        data = fs.readFileSync(configPath());
+        const filePath = configPath();
+        if (!fs.existsSync(filePath)) {
+            throw new ConfigError("configuration file not found: " + filePath);
+        }
+        data = fs.readFileSync(filePath);
     } catch (error) {
         if (error instanceof ConfigError) {
             return fail(error);
@@ -946,7 +1020,9 @@ module.exports = {
     configPath,
     defaultConfig,
     validateConfig,
+    sparseConfig,
     atomicWriteJson,
+    persistConfig,
     ensureBootstrapped,
     loadStrict,
     loadDisplay,
