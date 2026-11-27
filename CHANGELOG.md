@@ -1,7 +1,11 @@
 # Changelog
 
-## [0.0.8](https://github.com/Ogekuri/GitHub-Template-NodeJS/releases/tag/v0.0.8) - 2026-11-26
+## [0.0.9](https://github.com/Ogekuri/GitHub-Template-NodeJS/releases/tag/v0.0.9) - 2026-11-27
 ### ⛰️  Features
+- add TODO-chapter and no-line-wrap mandates, unwrap README [useReq] *(README)*
+  Add DES-073..DES-083 and TST-036 to usereq/docs/REQUIREMENTS.md: every README.md level-1 chapter must open with its TODO completion block (placement and content as currently written), paragraph/list-item/blockquote text must not be hard-wrapped, and line breaks must stay confined to structural boundaries.
+  Unwrap README.md: join 35 hard-wrapped text blocks into single physical lines (76 wrapped lines removed), preserving headings, blank separators, list items, tables, fenced code blocks, blockquote markers, and discrete HTML elements.
+  No src/ changes. Verification: req-static-check clean; npm test 79/79 pass; TST-036 README parse: 8/8 chapters TODO-OK, no residual wraps.
 - Add .galias.conf file.
 
 ### 🏗️  Implementations
@@ -47,6 +51,17 @@
 - Update .gitignore file.
 
 ### 🚜  Changes
+- persist only non-default configuration values [useReq] *(config)*
+  REQUIREMENTS: add REQ-049..REQ-055 (sparse persistence, default-value
+  removal at save, empty-file deletion, absent-file-as-defaults reads,
+  directory-only bootstrap, print-raw absence failure, sparse strict
+  validation) and TST-037; refine REQ-017/REQ-018 and the scope section.
+  src/config.js: add sparseConfig/persistConfig save gate and
+  removeConfigFile, sparse validateConfig, absent-file-tolerant
+  readPayload/loadStrict/loadDisplay, directory-only ensureBootstrapped,
+  print-raw absence diagnostic; drop dead sortedDifference.
+  tests: add TST-037 sparse lifecycle and projection suites; reseed
+  print-raw and invalid-enum tests with sparse configuration files.
 - deploy CLI under long and short bin names [useReq] *(packaging)*
   REQUIREMENTS: DES-003 mandates exactly two bin entry points (githubtemplatenodejs, templatenodejs) both invoking src/githubtemplatenodejs/main.js; TST-031 and A-11 updated accordingly. package.json: bin adds the templatenodejs short-name entry mapping to the same CLI dispatcher. tests: TST-031 packaging assertion extended to both entries; full npm test suite passes 79/79. WORKFLOW: PROC:main entrypoints record the dual-name npm bin deployment.
 - pin develop upgrade to develop branch and add --dev alias [useReq] *(management)*
@@ -64,12 +79,15 @@
   tests/galias_conf.test.js verifying rule resolution and version
   agreement. g ver now exits 0; npm test passes 73/73.
 
+### 📚  Documentation
+- Update README.md file.
+
 ### ◀️  Revert
 - Roll back branch to 7ca258f7 (7ca258f7069b57ad71581ec811e02ccdea0cb41c).
 
 
 # History
 
-- \[0.0.8\]: https://github.com/Ogekuri/GitHub-Template-NodeJS/releases/tag/v0.0.8
+- \[0.0.9\]: https://github.com/Ogekuri/GitHub-Template-NodeJS/releases/tag/v0.0.9
 
-[0.0.8]: https://github.com/Ogekuri/GitHub-Template-NodeJS/releases/tag/v0.0.8
+[0.0.9]: https://github.com/Ogekuri/GitHub-Template-NodeJS/releases/tag/v0.0.9

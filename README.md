@@ -1,7 +1,7 @@
 > [!CAUTION]
 > **STRICTLY EXPERIMENTAL**: this project is a proof-of-concept template under active development. Interfaces, commands, packaging metadata, and release channels may change at any time without notice. Do not rely on it for production workloads.
 
-# githubtemplatenodejs / templatenodejs (0.0.8)
+# githubtemplatenodejs / templatenodejs (0.0.9)
 
 TODO: Once you have renamed the template using scripts/rename-me.sh, update and complete this README.md following the TODO instructions.
 
@@ -133,7 +133,7 @@ The launcher resolves the repository root and delegates to `node src/templatenod
 The full help screen (printed by `--help` or by running the tool with no arguments):
 
 ```text
-Usage: githubtemplatenodejs [command] [options] (0.0.8)
+Usage: githubtemplatenodejs [command] [options] (0.0.9)
 
 Management Commands:
   --upgrade   - Reinstall githubtemplatenodejs on Linux; print manual command elsewhere.
